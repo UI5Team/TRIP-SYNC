@@ -1,14 +1,16 @@
 package com.tripsync.controller;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 
+import com.tripsync.data.DataAccessException;
+import com.tripsync.data.TripRepository;
+import com.tripsync.model.Trip;
 import com.tripsync.nav.AppContext;
 import com.tripsync.nav.Route;
 import com.tripsync.nav.RoutedController;
 import com.tripsync.nav.Router;
 import com.tripsync.ui.Toast;
+import com.tripsync.util.Dates;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -19,13 +21,10 @@ import javafx.scene.control.TextField;
 /**
  * 화면 4 — 여행 생성.
  *
- * <p><b>[1단계]</b> 입력 검증(여행명 필수, 종료일 ≥ 시작일)까지 구현한다.
- * 실제 저장은 3단계에서 추가한다.</p>
+ * <p>설계서 7장: 여행명·시작일·종료일이 모두 필수이고, 종료일은 시작일보다 빠를 수 없다.
+ * 날짜를 고르는 즉시 "3박 4일" 이 계산돼 보이므로, 저장을 눌러야 잘못을 알게 되는 일이 없다.</p>
  */
 public class TripCreateController implements RoutedController {
-
-    private static final DateTimeFormatter DATE_FORMAT =
-            DateTimeFormatter.ofPattern("yyyy. M. d.");
 
     private static final int MAX_TITLE_LENGTH = 40;
 
@@ -39,7 +38,7 @@ public class TripCreateController implements RoutedController {
     @FXML private Button cancelButton;
     @FXML private Button submitButton;
 
-    /** 어느 모임에 여행을 추가하는지. [3단계에서 저장에 사용] */
+    /** 어느 모임에 여행을 추가하는지 */
     private Long groupId;
 
     @FXML
@@ -48,9 +47,9 @@ public class TripCreateController implements RoutedController {
         submitButton.setOnAction(e -> handleSubmit());
 
         titleField.textProperty().addListener((obs, old, now) -> hideTitleError());
+        titleField.setOnAction(e -> handleSubmit());
 
-        // 날짜를 고를 때마다 기간을 즉시 계산해 보여준다.
-        // 저장을 눌러야 문제를 알려주는 대신, 고르는 순간 결과가 보이게 한다.
+        // 날짜를 고를 때마다 기간을 즉시 계산해 보여준다
         startDatePicker.valueProperty().addListener((obs, old, now) -> onDateChanged());
         endDatePicker.valueProperty().addListener((obs, old, now) -> onDateChanged());
     }
@@ -64,7 +63,12 @@ public class TripCreateController implements RoutedController {
                 .orElse("모임에 새 여행을 추가합니다."));
 
         // 어느 모임인지 모르면 저장할 수 없으므로 아예 막는다
-        submitButton.setDisable(groupId == null);
+        if (groupId == null) {
+            groupContextLabel.setText("모임을 먼저 선택해 주세요. 모임 목록에서 모임을 연 뒤 여행을 만들 수 있습니다.");
+            submitButton.setDisable(true);
+        } else {
+            submitButton.setDisable(false);
+        }
 
         titleField.clear();
         startDatePicker.setValue(null);
@@ -93,8 +97,7 @@ public class TripCreateController implements RoutedController {
         }
 
         hideDateError();
-        long nights = ChronoUnit.DAYS.between(start, end);
-        durationLabel.setText(nights == 0 ? "당일치기" : nights + "박 " + (nights + 1) + "일");
+        durationLabel.setText(Dates.duration(start, end));
     }
 
     private void handleSubmit() {
@@ -102,6 +105,10 @@ public class TripCreateController implements RoutedController {
         LocalDate start = startDatePicker.getValue();
         LocalDate end = endDatePicker.getValue();
 
+        if (groupId == null) {
+            Toast.warn("모임을 먼저 선택해 주세요.");
+            return;
+        }
         // 설계서 7장 화면 4: 여행명은 비워 둘 수 없다
         if (title.isEmpty()) {
             showTitleError("여행명을 입력해 주세요.");
@@ -121,14 +128,20 @@ public class TripCreateController implements RoutedController {
             return;
         }
 
-        // [3단계에서 추가] 여기서 저장소에 여행을 저장한다.
+        try {
+            Trip created = TripRepository.create(groupId, title, start, end);
 
-        Toast.success("'" + title + "' 여행을 만들었습니다. ("
-                + start.format(DATE_FORMAT) + " ~ " + end.format(DATE_FORMAT) + ")");
+            Toast.success("'" + created.title() + "' 여행을 만들었습니다. "
+                    + Dates.period(start, end));
 
-        // 생성 화면은 히스토리에서 빼고 바로 여행 상세로 넘어간다
-        Router.back();
-        Router.navigate(Route.TRIP_DETAIL, title);
+            // 생성 화면은 히스토리에서 빼고 바로 여행 상세로 넘어간다
+            Router.back();
+            Router.navigate(Route.TRIP_DETAIL, created.id());
+
+        } catch (DataAccessException e) {
+            // 설계서 10장: 저장 실패 → 입력값을 유지하고 재시도 안내
+            showDateError(e.getMessage() + " 입력한 내용은 그대로 두었으니 다시 시도해 주세요.");
+        }
     }
 
     private void showTitleError(String message) {

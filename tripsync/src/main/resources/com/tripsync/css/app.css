@@ -481,6 +481,16 @@
     -fx-background-color: transparent;
 }
 
+/* DAY 탭 줄: 기간이 길 때만 가로 스크롤바가 나타난다 */
+.date-tab-scroll {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+}
+
+.date-tab-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
 /* ========================= 초대 코드 ========================= */
 
 .invite-code {

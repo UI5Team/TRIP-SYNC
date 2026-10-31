@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.tripsync.nav.AppContext;
 import com.tripsync.nav.RoutedController;
 import com.tripsync.nav.Router;
 import com.tripsync.ui.EmptyState;
@@ -53,6 +54,9 @@ public class WishlistController implements RoutedController {
 
     private String tripTitle = "여행";
 
+    /** 어느 여행의 위시리스트인지. [5단계에서 저장에 사용] */
+    private Long tripId;
+
     /** [1단계] 메모리 보관 — 5단계에서 저장소로 옮긴다 */
     private final List<WishItem> wishes = new ArrayList<>();
     private WishItem selected;
@@ -75,9 +79,10 @@ public class WishlistController implements RoutedController {
 
     @Override
     public void onEnter(Object param) {
-        if (param instanceof String title && !title.isBlank()) {
-            tripTitle = title;
-        }
+        // 여행 상세가 여행 id 를 넘겨준다. 이름은 현재 문맥에서 가져온다.
+        tripId = param instanceof Long id ? id : AppContext.currentTripId().orElse(null);
+        tripTitle = AppContext.currentTripTitle().orElse("여행");
+
         tripContextLabel.setText("'" + tripTitle + "' 여행의 후보 장소입니다. 모임원이 함께 보는 목록입니다.");
         renderWishes();
     }

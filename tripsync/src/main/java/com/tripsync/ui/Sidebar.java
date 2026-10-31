@@ -5,12 +5,15 @@ import java.util.Optional;
 
 import com.tripsync.data.DataAccessException;
 import com.tripsync.data.GroupRepository;
+import com.tripsync.data.TripRepository;
 import com.tripsync.data.UserRepository;
 import com.tripsync.model.AppUser;
 import com.tripsync.model.Group;
+import com.tripsync.model.Trip;
 import com.tripsync.nav.AppContext;
 import com.tripsync.nav.Route;
 import com.tripsync.nav.Router;
+import com.tripsync.util.Dates;
 
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -40,6 +43,15 @@ public class Sidebar extends VBox {
     private final VBox navBox = new VBox(2);
     private final VBox groupListBox = new VBox(2);
     private final MenuButton userButton = new MenuButton();
+
+    /** 목록 구역의 제목. 모임을 열면 그 모임의 여행 목록으로 바뀐다. */
+    private final Label listTitle = new Label();
+
+    /** 여행 목록을 보고 있을 때만 보이는 '모든 모임' 되돌리기 버튼 */
+    private final Button listBackButton = new Button("모든 모임");
+
+    /** 목록 구역의 '추가' 버튼. 문맥에 따라 모임 추가 / 여행 추가로 바뀐다. */
+    private final Button listAddButton = new Button();
 
     public Sidebar() {
         getStyleClass().add("sidebar");
@@ -88,18 +100,28 @@ public class Sidebar extends VBox {
         return separator;
     }
 
+    /**
+     * 목록 구역의 머리말.
+     *
+     * <p>모임을 열지 않았으면 '내 모임', 열었으면 그 모임의 '여행' 목록을 보여준다.
+     * 참고 디자인의 '내 여행 목록' 자리를 문맥에 따라 바꿔 쓰는 셈이다.
+     * 사이드바에 목록을 두 개 쌓으면 세로가 금방 모자라기 때문이다.</p>
+     */
     private Region buildGroupSectionHeader() {
-        Label title = new Label("내 모임");
-        title.getStyleClass().add("sidebar-section-title");
+        listTitle.getStyleClass().add("sidebar-section-title");
+
+        listBackButton.getStyleClass().add("sidebar-add-button");
+        listBackButton.setOnAction(e -> {
+            AppContext.clear();
+            Router.resetTo(Route.GROUP_LIST, null);
+        });
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Button add = new Button("＋ 추가");
-        add.getStyleClass().add("sidebar-add-button");
-        add.setOnAction(e -> Router.navigate(Route.GROUP_CREATE));
+        listAddButton.getStyleClass().add("sidebar-add-button");
 
-        HBox row = new HBox(6, title, spacer, add);
+        HBox row = new HBox(6, listTitle, listBackButton, spacer, listAddButton);
         row.setAlignment(Pos.CENTER_LEFT);
         row.getStyleClass().add("sidebar-section-header");
         return row;
@@ -138,13 +160,20 @@ public class Sidebar extends VBox {
                 true,
                 () -> Router.resetTo(Route.GROUP_LIST, null)));
 
-        // 모임 상세는 연 모임이 있을 때만 의미가 있다
+        // 모임 상세와 여행 상세는 해당 대상을 연 적이 있을 때만 의미가 있다
         Optional<Long> groupId = AppContext.currentGroupId();
         navBox.getChildren().add(navItem("＃",
                 AppContext.currentGroupName().orElse("선택한 모임 없음"),
                 active == Route.GROUP_DETAIL,
                 groupId.isPresent(),
                 () -> groupId.ifPresent(id -> Router.navigate(Route.GROUP_DETAIL, id))));
+
+        Optional<Long> tripId = AppContext.currentTripId();
+        navBox.getChildren().add(navItem("🗓",
+                AppContext.currentTripTitle().orElse("선택한 여행 없음"),
+                active == Route.TRIP_DETAIL,
+                tripId.isPresent(),
+                () -> tripId.ifPresent(id -> Router.navigate(Route.TRIP_DETAIL, id))));
     }
 
     private Region navItem(String icon, String text, boolean active, boolean enabled, Runnable action) {
@@ -168,9 +197,29 @@ public class Sidebar extends VBox {
         return row;
     }
 
+    /** 목록 구역을 문맥에 맞춰 그린다. 모임을 열었으면 그 모임의 여행 목록을 보여준다. */
     private void renderGroups() {
         groupListBox.getChildren().clear();
 
+        Optional<Long> openGroupId = AppContext.currentGroupId();
+        boolean showingTrips = openGroupId.isPresent();
+
+        listTitle.setText(showingTrips ? "여행" : "내 모임");
+        listAddButton.setText(showingTrips ? "＋ 여행" : "＋ 모임");
+        listBackButton.setVisible(showingTrips);
+        listBackButton.setManaged(showingTrips);
+
+        if (showingTrips) {
+            long groupId = openGroupId.get();
+            listAddButton.setOnAction(e -> Router.navigate(Route.TRIP_CREATE, groupId));
+            renderTripList(groupId);
+        } else {
+            listAddButton.setOnAction(e -> Router.navigate(Route.GROUP_CREATE));
+            renderGroupList();
+        }
+    }
+
+    private void renderGroupList() {
         List<Group> groups;
         try {
             groups = GroupRepository.findAllForUser(UserRepository.currentUserId());
@@ -184,25 +233,52 @@ public class Sidebar extends VBox {
             return;
         }
 
-        Long activeId = AppContext.currentGroupId().orElse(null);
         for (Group group : groups) {
-            groupListBox.getChildren().add(groupItem(group, Long.valueOf(group.id()).equals(activeId)));
+            groupListBox.getChildren().add(listItem(
+                    group.name(),
+                    "참여자 " + group.memberCount() + "명 · " + group.inviteCode(),
+                    false,
+                    () -> Router.navigate(Route.GROUP_DETAIL, group.id())));
         }
     }
 
-    private Region groupItem(Group group, boolean active) {
-        Label name = new Label(group.name());
-        name.getStyleClass().add("sidebar-group-name");
+    private void renderTripList(long groupId) {
+        List<Trip> trips;
+        try {
+            trips = TripRepository.findAllByGroup(groupId);
+        } catch (DataAccessException e) {
+            groupListBox.getChildren().add(hintLabel("여행을 불러오지 못했습니다"));
+            return;
+        }
 
-        Label meta = new Label("참여자 " + group.memberCount() + "명 · " + group.inviteCode());
-        meta.getStyleClass().add("sidebar-group-meta");
+        if (trips.isEmpty()) {
+            groupListBox.getChildren().add(hintLabel("아직 여행이 없습니다"));
+            return;
+        }
 
-        VBox box = new VBox(2, name, meta);
+        Long activeTripId = AppContext.currentTripId().orElse(null);
+        for (Trip trip : trips) {
+            groupListBox.getChildren().add(listItem(
+                    trip.title(),
+                    Dates.period(trip.startDate(), trip.endDate()),
+                    Long.valueOf(trip.id()).equals(activeTripId),
+                    () -> Router.navigate(Route.TRIP_DETAIL, trip.id())));
+        }
+    }
+
+    private Region listItem(String name, String meta, boolean active, Runnable onOpen) {
+        Label nameLabel = new Label(name);
+        nameLabel.getStyleClass().add("sidebar-group-name");
+
+        Label metaLabel = new Label(meta);
+        metaLabel.getStyleClass().add("sidebar-group-meta");
+
+        VBox box = new VBox(2, nameLabel, metaLabel);
         box.getStyleClass().add("sidebar-group-item");
         if (active) {
             box.getStyleClass().add("sidebar-group-item-active");
         }
-        box.setOnMouseClicked(e -> Router.navigate(Route.GROUP_DETAIL, group.id()));
+        box.setOnMouseClicked(e -> onOpen.run());
         return box;
     }
 

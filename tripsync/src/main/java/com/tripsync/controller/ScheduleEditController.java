@@ -1,13 +1,12 @@
 package com.tripsync.controller;
 
-import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 
 import com.tripsync.nav.RoutedController;
 import com.tripsync.nav.Router;
 import com.tripsync.ui.Toast;
+import com.tripsync.util.Dates;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -28,7 +27,6 @@ import javafx.scene.control.TextField;
  */
 public class ScheduleEditController implements RoutedController {
 
-    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
     private static final int MAX_PLACE_LENGTH = 50;
 
     /** 설계서 11장: 장소 분류는 선택 목록으로 제공할 수 있다 */
@@ -109,7 +107,7 @@ public class ScheduleEditController implements RoutedController {
         String rawTime = timeComboBox.getEditor().getText();
         LocalTime time = null;
         if (rawTime != null && !rawTime.isBlank()) {
-            time = parseTime(rawTime.trim());
+            time = Dates.parseTime(rawTime);
             if (time == null) {
                 showDateError("시간은 HH:mm 형식으로 입력해 주세요. (예: 14:30)");
                 return;
@@ -118,31 +116,11 @@ public class ScheduleEditController implements RoutedController {
 
         // [4단계에서 추가] 여기서 저장소에 일정을 저장한다.
 
-        String when = time == null ? "시간 미정" : time.format(TIME_FORMAT);
+        String when = time == null ? "시간 미정" : Dates.time(time);
         Toast.success("일정을 저장했습니다. " + placeName + " · " + when);
 
         // 설계서: 저장/수정 완료 후 여행 상세 화면으로 돌아간다
         Router.back();
-    }
-
-    /** "14:30", "1430", "9:5" 같은 입력을 최대한 받아준다. 해석할 수 없으면 null. */
-    private LocalTime parseTime(String raw) {
-        String text = raw;
-        if (text.matches("^\\d{4}$")) {
-            text = text.substring(0, 2) + ":" + text.substring(2);
-        }
-        if (!text.contains(":")) {
-            return null;
-        }
-        String[] parts = text.split(":", 2);
-        try {
-            int hour = Integer.parseInt(parts[0].trim());
-            int minute = Integer.parseInt(parts[1].trim());
-            return LocalTime.of(hour, minute);
-        } catch (NumberFormatException | DateTimeException e) {
-            // 숫자가 아니거나 24시를 넘는 값 — 호출한 쪽에서 안내 문구를 띄운다
-            return null;
-        }
     }
 
     private void showDateError(String message) {

@@ -31,8 +31,16 @@
                 <Button fx:id="addScheduleButton" styleClass="button-primary" text="＋ 일정 추가" />
             </HBox>
 
-            <!-- 날짜 선택: 여행 기간의 날짜가 버튼으로 깔린다 -->
-            <HBox fx:id="dateTabBar" alignment="CENTER_LEFT" spacing="8" />
+            <!--
+              날짜 선택: 여행 기간의 날짜가 DAY 탭으로 깔린다.
+              기간이 길면 가로로 넘치므로 스크롤되게 감싼다.
+            -->
+            <ScrollPane fitToHeight="true" hbarPolicy="AS_NEEDED" vbarPolicy="NEVER"
+                        styleClass="date-tab-scroll">
+                <content>
+                    <HBox fx:id="dateTabBar" alignment="CENTER_LEFT" spacing="8" />
+                </content>
+            </ScrollPane>
 
             <padding>
                 <Insets bottom="18" />
