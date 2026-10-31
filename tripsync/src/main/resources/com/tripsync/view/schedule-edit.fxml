@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  화면 6 — 일정 추가 / 수정
+  설계서 7장: 필수값은 날짜와 장소명. 시작 시간과 메모는 선택.
+-->
+<VBox alignment="TOP_CENTER" styleClass="page"
+      xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.tripsync.controller.ScheduleEditController">
+
+    <VBox maxWidth="640" spacing="20" styleClass="page-narrow">
+
+        <VBox spacing="5">
+            <Label fx:id="headingLabel" styleClass="page-title" text="일정 추가" />
+            <Label styleClass="page-subtitle"
+                   text="장소는 직접 입력합니다. 지도 검색 없이 장소명과 메모만으로 일정을 관리합니다." />
+        </VBox>
+
+        <VBox spacing="18" styleClass="card">
+
+            <!-- 날짜 (필수) + 시작 시간 (선택) -->
+            <HBox spacing="18">
+                <VBox spacing="7" HBox.hgrow="ALWAYS">
+                    <HBox alignment="CENTER_LEFT" spacing="4">
+                        <Label styleClass="field-label" text="날짜" />
+                        <Label styleClass="field-required" text="*" />
+                    </HBox>
+                    <DatePicker fx:id="datePicker" maxWidth="Infinity" promptText="날짜 선택" />
+                </VBox>
+
+                <VBox spacing="7" prefWidth="180">
+                    <HBox alignment="CENTER_LEFT" spacing="6">
+                        <Label styleClass="field-label" text="시작 시간" />
+                        <Label styleClass="field-optional" text="선택" />
+                    </HBox>
+                    <ComboBox fx:id="timeComboBox" editable="true" maxWidth="Infinity"
+                              promptText="예: 14:30" />
+                </VBox>
+            </HBox>
+            <Label fx:id="dateErrorLabel" managed="false" styleClass="error-text" visible="false" />
+
+            <!-- 장소명 (필수) + 분류 (선택) -->
+            <HBox spacing="18">
+                <VBox spacing="7" HBox.hgrow="ALWAYS">
+                    <HBox alignment="CENTER_LEFT" spacing="4">
+                        <Label styleClass="field-label" text="장소명" />
+                        <Label styleClass="field-required" text="*" />
+                    </HBox>
+                    <TextField fx:id="placeNameField" promptText="예: 성산일출봉" />
+                </VBox>
+
+                <VBox spacing="7" prefWidth="180">
+                    <HBox alignment="CENTER_LEFT" spacing="6">
+                        <Label styleClass="field-label" text="분류" />
+                        <Label styleClass="field-optional" text="선택" />
+                    </HBox>
+                    <ComboBox fx:id="categoryComboBox" maxWidth="Infinity" promptText="분류 선택" />
+                </VBox>
+            </HBox>
+            <Label fx:id="placeErrorLabel" managed="false" styleClass="error-text" visible="false" />
+
+            <!-- 메모 (선택) -->
+            <VBox spacing="7">
+                <HBox alignment="CENTER_LEFT" spacing="6">
+                    <Label styleClass="field-label" text="메모" />
+                    <Label styleClass="field-optional" text="선택" />
+                </HBox>
+                <TextArea fx:id="memoArea" prefRowCount="4" wrapText="true"
+                          promptText="입장료, 예약 여부, 함께 갈 사람 등 기억할 내용을 적어두세요." />
+            </VBox>
+
+        </VBox>
+
+        <HBox alignment="CENTER_RIGHT" spacing="10">
+            <Region HBox.hgrow="ALWAYS" />
+            <Button fx:id="cancelButton" styleClass="button-ghost" text="취소" />
+            <Button fx:id="saveButton" styleClass="button-primary" text="저장" />
+        </HBox>
+
+    </VBox>
+</VBox>

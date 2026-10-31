@@ -1,0 +1,378 @@
+/* =========================================================================
+   TripSync 디자인 시스템
+   -------------------------------------------------------------------------
+   JavaFX CSS 는 웹 CSS 의 var() 를 지원하지 않는 대신 "looked-up color" 를
+   지원한다. .root 에 색 이름을 한 번 정의해두면 하위 노드에서 그대로 참조할 수
+   있고, 값을 바꾸면 앱 전체 색이 한 번에 바뀐다.
+   ========================================================================= */
+
+.root {
+    /* 배경 / 면 */
+    -ts-bg:            #F4F1EC;
+    -ts-surface:       #FFFFFF;
+    -ts-surface-alt:   #FAF8F4;
+    -ts-surface-sunk:  #EFEBE4;
+
+    /* 글자 */
+    -ts-ink:           #16211F;
+    -ts-ink-soft:      #44534F;
+    -ts-ink-muted:     #7C8884;
+
+    /* 선 */
+    -ts-line:          #E2DCD3;
+    -ts-line-strong:   #CFC7BA;
+
+    /* 브랜드: 깊은 청록 — 여행/지도 느낌을 주면서 기본 파랑과 구분된다 */
+    -ts-primary:       #1F6F6B;
+    -ts-primary-dark:  #175854;
+    -ts-primary-soft:  #E1EFED;
+
+    /* 강조: 따뜻한 호박색 — 날짜, 초대 코드처럼 눈에 띄어야 하는 요소 */
+    -ts-accent:        #D98324;
+    -ts-accent-soft:   #FAEEDC;
+
+    /* 상태 */
+    -ts-danger:        #C0432F;
+    -ts-danger-soft:   #FBE9E6;
+
+    -fx-font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    -fx-font-size: 13.5px;
+    -fx-background-color: -ts-bg;
+}
+
+.app-shell {
+    -fx-background-color: -ts-bg;
+}
+
+/* ========================= 상단 바 ========================= */
+
+.app-bar {
+    -fx-background-color: -ts-surface;
+    -fx-padding: 0 22 0 18;
+    -fx-min-height: 58;
+    -fx-pref-height: 58;
+    -fx-border-color: transparent transparent -ts-line transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.brand {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ts-primary;
+}
+
+.app-bar-divider {
+    -fx-text-fill: -ts-line-strong;
+    -fx-font-size: 15px;
+}
+
+.screen-title {
+    -fx-font-size: 14px;
+    -fx-text-fill: -ts-ink-soft;
+}
+
+.offline-badge {
+    -fx-background-color: -ts-primary-soft;
+    -fx-text-fill: -ts-primary-dark;
+    -fx-padding: 4 11 4 11;
+    -fx-background-radius: 20;
+    -fx-font-size: 11.5px;
+}
+
+.back-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -ts-ink-soft;
+    -fx-padding: 6 12 6 10;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-font-size: 13px;
+}
+
+.back-button:hover {
+    -fx-background-color: -ts-surface-sunk;
+    -fx-text-fill: -ts-ink;
+}
+
+/* ========================= 페이지 공통 ========================= */
+
+.page {
+    -fx-background-color: -ts-bg;
+    -fx-padding: 28 36 28 36;
+}
+
+/* 폼처럼 가운데 한 줄로 읽는 화면 */
+.page-narrow {
+    -fx-max-width: 620;
+}
+
+.page-title {
+    -fx-font-size: 25px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ts-ink;
+}
+
+.page-subtitle {
+    -fx-font-size: 13.5px;
+    -fx-text-fill: -ts-ink-muted;
+}
+
+.section-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ts-ink;
+}
+
+.section-caption {
+    -fx-font-size: 12px;
+    -fx-text-fill: -ts-ink-muted;
+}
+
+/* ========================= 카드 ========================= */
+
+.card {
+    -fx-background-color: -ts-surface;
+    -fx-background-radius: 12;
+    -fx-border-color: -ts-line;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 18;
+}
+
+/* 클릭해서 이동하는 카드 — 커서와 테두리로 '누를 수 있다'를 드러낸다 */
+.card-clickable {
+    -fx-cursor: hand;
+}
+
+.card-clickable:hover {
+    -fx-border-color: -ts-primary;
+    -fx-background-color: -ts-surface-alt;
+}
+
+.card-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ts-ink;
+}
+
+.card-meta {
+    -fx-font-size: 12.5px;
+    -fx-text-fill: -ts-ink-muted;
+}
+
+/* 패널: 3분할 레이아웃의 각 열 */
+.panel {
+    -fx-background-color: -ts-surface;
+    -fx-background-radius: 12;
+    -fx-border-color: -ts-line;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+}
+
+.panel-header {
+    -fx-padding: 14 16 12 16;
+    -fx-border-color: transparent transparent -ts-line transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.panel-body {
+    -fx-padding: 14 16 16 16;
+}
+
+/* ========================= 버튼 ========================= */
+
+.button {
+    -fx-background-radius: 9;
+    -fx-padding: 9 18 9 18;
+    -fx-cursor: hand;
+    -fx-font-size: 13px;
+}
+
+.button-primary {
+    -fx-background-color: -ts-primary;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.button-primary:hover {
+    -fx-background-color: -ts-primary-dark;
+}
+
+.button-secondary {
+    -fx-background-color: -ts-primary-soft;
+    -fx-text-fill: -ts-primary-dark;
+    -fx-font-weight: bold;
+}
+
+.button-secondary:hover {
+    -fx-background-color: derive(-ts-primary-soft, -6%);
+}
+
+.button-ghost {
+    -fx-background-color: -ts-surface;
+    -fx-text-fill: -ts-ink-soft;
+    -fx-border-color: -ts-line-strong;
+    -fx-border-radius: 9;
+    -fx-border-width: 1;
+}
+
+.button-ghost:hover {
+    -fx-background-color: -ts-surface-sunk;
+    -fx-text-fill: -ts-ink;
+}
+
+.button-danger {
+    -fx-background-color: -ts-danger-soft;
+    -fx-text-fill: -ts-danger;
+    -fx-font-weight: bold;
+}
+
+.button-danger:hover {
+    -fx-background-color: derive(-ts-danger-soft, -6%);
+}
+
+.button:disabled {
+    -fx-opacity: 0.45;
+    -fx-cursor: default;
+}
+
+/* ========================= 입력 ========================= */
+
+.field-label {
+    -fx-font-size: 12.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ts-ink-soft;
+}
+
+/* 필수 입력 표시 — 설계서 13장 "필수와 선택이 구분되어 있는가" */
+.field-required {
+    -fx-text-fill: -ts-danger;
+    -fx-font-size: 12.5px;
+}
+
+.field-optional {
+    -fx-text-fill: -ts-ink-muted;
+    -fx-font-size: 11.5px;
+}
+
+.text-field, .text-area, .date-picker > .text-field, .combo-box {
+    -fx-background-color: -ts-surface;
+    -fx-background-radius: 9;
+    -fx-border-color: -ts-line-strong;
+    -fx-border-radius: 9;
+    -fx-border-width: 1;
+    -fx-padding: 9 12 9 12;
+    -fx-text-fill: -ts-ink;
+    -fx-prompt-text-fill: -ts-ink-muted;
+}
+
+.text-field:focused, .text-area:focused, .combo-box:focused {
+    -fx-border-color: -ts-primary;
+}
+
+/* 검증 실패한 입력란 */
+.field-error {
+    -fx-border-color: -ts-danger;
+}
+
+/* 입력란 아래에 뜨는 오류 문구 */
+.error-text {
+    -fx-text-fill: -ts-danger;
+    -fx-font-size: 12px;
+}
+
+.date-picker {
+    -fx-background-color: transparent;
+}
+
+/* ========================= 목록 ========================= */
+
+.list-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 10 12 10 12;
+    -fx-text-fill: -ts-ink;
+    -fx-background-radius: 9;
+}
+
+.list-view .list-cell:filled:hover {
+    -fx-background-color: -ts-surface-alt;
+}
+
+.list-view .list-cell:filled:selected {
+    -fx-background-color: -ts-primary-soft;
+    -fx-text-fill: -ts-primary-dark;
+}
+
+.scroll-pane, .scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* ========================= 초대 코드 ========================= */
+
+.invite-code {
+    -fx-font-family: "Consolas", "D2Coding", monospace;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ts-accent;
+    -fx-background-color: -ts-accent-soft;
+    -fx-padding: 6 13 6 13;
+    -fx-background-radius: 8;
+}
+
+/* ========================= 빈 상태 ========================= */
+
+.empty-state {
+    -fx-padding: 44 28 44 28;
+    -fx-background-color: -ts-surface-alt;
+    -fx-background-radius: 12;
+    -fx-border-color: -ts-line;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+}
+
+.empty-title {
+    -fx-font-size: 15.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ts-ink-soft;
+}
+
+.empty-description {
+    -fx-font-size: 13px;
+    -fx-text-fill: -ts-ink-muted;
+}
+
+/* ========================= 토스트 ========================= */
+
+.toast {
+    -fx-padding: 11 20 11 20;
+    -fx-background-radius: 10;
+    -fx-font-size: 13px;
+    -fx-text-fill: white;
+}
+
+.toast-success {
+    -fx-background-color: -ts-primary-dark;
+}
+
+.toast-warn {
+    -fx-background-color: -ts-danger;
+}
+
+/* ========================= 1단계 안내 배너 ========================= */
+/* 아직 구현되지 않은 화면임을 알리는 임시 배너. 단계가 끝나면 제거한다. */
+
+.stage-note {
+    -fx-background-color: -ts-accent-soft;
+    -fx-border-color: derive(-ts-accent, 55%);
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-border-width: 1;
+    -fx-padding: 11 15 11 15;
+    -fx-font-size: 12.5px;
+    -fx-text-fill: #7A4A11;
+}

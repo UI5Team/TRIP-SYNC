@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  화면 7 — 공동 위시리스트
+  설계서 7장: 장소명 텍스트로 후보를 모으고, 선택한 후보를 일정으로 등록한다.
+             지도 검색, 투표, 좋아요는 구현하지 않는다.
+-->
+<BorderPane styleClass="page"
+            xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.tripsync.controller.WishlistController">
+
+    <top>
+        <VBox spacing="16">
+            <VBox spacing="5">
+                <Label styleClass="page-title" text="공동 위시리스트" />
+                <Label fx:id="tripContextLabel" styleClass="page-subtitle" text="" />
+            </VBox>
+
+            <!-- 후보 장소 추가 -->
+            <VBox spacing="8" styleClass="card">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <HBox alignment="CENTER_LEFT" spacing="4">
+                        <Label styleClass="field-label" text="장소명" />
+                        <Label styleClass="field-required" text="*" />
+                    </HBox>
+                    <TextField fx:id="placeNameField" promptText="예: 우도 땅콩아이스크림" HBox.hgrow="ALWAYS" />
+                    <TextField fx:id="noteField" prefWidth="220" promptText="메모 (선택)" />
+                    <Button fx:id="addButton" styleClass="button-primary" text="＋ 추가" />
+                </HBox>
+                <Label fx:id="addErrorLabel" managed="false" styleClass="error-text" visible="false" />
+            </VBox>
+
+            <padding>
+                <Insets bottom="18" />
+            </padding>
+        </VBox>
+    </top>
+
+    <center>
+        <HBox spacing="16">
+
+            <!-- 후보 목록 -->
+            <VBox styleClass="panel" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="8" styleClass="panel-header">
+                    <Label styleClass="section-title" text="후보 장소" />
+                    <Label fx:id="wishCountLabel" styleClass="section-caption" />
+                </HBox>
+                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" VBox.vgrow="ALWAYS">
+                    <content>
+                        <VBox fx:id="wishListBox" spacing="9" styleClass="panel-body" />
+                    </content>
+                </ScrollPane>
+            </VBox>
+
+            <!-- 선택한 후보를 일정으로 등록 -->
+            <VBox minWidth="280" prefWidth="330" styleClass="panel">
+                <HBox alignment="CENTER_LEFT" styleClass="panel-header">
+                    <Label styleClass="section-title" text="일정에 등록" />
+                </HBox>
+                <VBox spacing="15" styleClass="panel-body">
+
+                    <VBox spacing="4">
+                        <Label styleClass="field-label" text="선택한 장소" />
+                        <Label fx:id="selectedPlaceLabel" styleClass="card-title"
+                               text="선택된 장소 없음" wrapText="true" />
+                    </VBox>
+
+                    <VBox spacing="7">
+                        <HBox alignment="CENTER_LEFT" spacing="4">
+                            <Label styleClass="field-label" text="날짜" />
+                            <Label styleClass="field-required" text="*" />
+                        </HBox>
+                        <DatePicker fx:id="registerDatePicker" maxWidth="Infinity" promptText="날짜 선택" />
+                    </VBox>
+
+                    <VBox spacing="7">
+                        <HBox alignment="CENTER_LEFT" spacing="6">
+                            <Label styleClass="field-label" text="시작 시간" />
+                            <Label styleClass="field-optional" text="선택" />
+                        </HBox>
+                        <ComboBox fx:id="registerTimeComboBox" editable="true" maxWidth="Infinity"
+                                  promptText="예: 14:30" />
+                    </VBox>
+
+                    <Label fx:id="registerErrorLabel" managed="false" styleClass="error-text" visible="false" />
+
+                    <Region VBox.vgrow="ALWAYS" />
+
+                    <Button fx:id="registerButton" maxWidth="Infinity"
+                            styleClass="button-primary" text="이 장소를 일정으로 등록" />
+                </VBox>
+            </VBox>
+
+        </HBox>
+    </center>
+
+</BorderPane>

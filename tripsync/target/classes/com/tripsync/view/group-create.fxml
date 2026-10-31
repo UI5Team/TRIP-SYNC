@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  화면 2 — 모임 생성
+  설계서 7장: 필수 입력은 모임 이름, 초대 코드는 자동 생성.
+-->
+<VBox alignment="TOP_CENTER" styleClass="page"
+      xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.tripsync.controller.GroupCreateController">
+
+    <VBox maxWidth="620" spacing="20" styleClass="page-narrow">
+
+        <VBox spacing="5">
+            <Label styleClass="page-title" text="모임 만들기" />
+            <Label styleClass="page-subtitle"
+                   text="모임을 만들면 초대 코드가 자동으로 생성됩니다. 친구에게 코드를 알려주면 같은 모임에 참여할 수 있습니다." />
+        </VBox>
+
+        <VBox spacing="18" styleClass="card">
+
+            <!-- 모임 이름 (필수) -->
+            <VBox spacing="7">
+                <HBox alignment="CENTER_LEFT" spacing="4">
+                    <Label styleClass="field-label" text="모임 이름" />
+                    <Label styleClass="field-required" text="*" />
+                </HBox>
+                <TextField fx:id="groupNameField" promptText="예: 졸업 여행 준비방" />
+                <Label fx:id="nameErrorLabel" managed="false" styleClass="error-text" visible="false" />
+            </VBox>
+
+            <!-- 초대 코드 (자동 생성) -->
+            <VBox spacing="7">
+                <Label styleClass="field-label" text="초대 코드 (자동 생성)" />
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label fx:id="inviteCodeLabel" styleClass="invite-code" text="——————" />
+                    <Button fx:id="regenerateButton" styleClass="button-ghost" text="다시 생성" />
+                </HBox>
+                <Label styleClass="field-optional"
+                       text="초대 코드는 이 프로그램 안에서 모임 참여를 시연하기 위한 코드입니다. 다른 PC 와는 공유되지 않습니다." />
+            </VBox>
+
+        </VBox>
+
+        <HBox alignment="CENTER_RIGHT" spacing="10">
+            <Region HBox.hgrow="ALWAYS" />
+            <Button fx:id="cancelButton" styleClass="button-ghost" text="취소" />
+            <Button fx:id="submitButton" styleClass="button-primary" text="모임 만들기" />
+        </HBox>
+
+    </VBox>
+</VBox>
