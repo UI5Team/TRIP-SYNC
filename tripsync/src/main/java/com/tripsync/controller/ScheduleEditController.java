@@ -9,6 +9,7 @@ import java.util.Optional;
 import com.tripsync.data.SessionStore;
 import com.tripsync.model.Category;
 import com.tripsync.model.ScheduleItem;
+import com.tripsync.model.WishlistItem;
 import com.tripsync.nav.AppContext;
 import com.tripsync.nav.RoutedController;
 import com.tripsync.nav.Router;
@@ -26,7 +27,11 @@ import javafx.scene.control.TextField;
 
 public class ScheduleEditController implements RoutedController {
 
-    public record Request(long tripId, LocalDate date, Long scheduleId) {
+    public record Request(long tripId, LocalDate date, Long scheduleId, WishlistItem fromWish) {
+
+        public Request(long tripId, LocalDate date, Long scheduleId) {
+            this(tripId, date, scheduleId, null);
+        }
     }
 
     private static final int MAX_PLACE_LENGTH = 50;
@@ -86,13 +91,17 @@ public class ScheduleEditController implements RoutedController {
             memoArea.setText(item.memo() == null ? "" : item.memo());
         } else {
             editingId = null;
-            headingLabel.setText("일정 추가");
+            WishlistItem seed = request == null ? null : request.fromWish();
+
+            headingLabel.setText(seed == null ? "일정 추가" : "위시리스트에서 일정 추가");
             datePicker.setValue(defaultDate);
             timeComboBox.setValue(null);
             timeComboBox.getEditor().clear();
-            placeNameField.clear();
-            categoryComboBox.setValue(Category.SIGHT.label());
-            memoArea.clear();
+            placeNameField.setText(seed == null ? "" : seed.placeName());
+            categoryComboBox.setValue(seed == null
+                    ? Category.SIGHT.label()
+                    : seed.category().label());
+            memoArea.setText(seed == null || !seed.hasNote() ? "" : seed.note());
         }
 
         saveButton.setDisable(tripId == null);

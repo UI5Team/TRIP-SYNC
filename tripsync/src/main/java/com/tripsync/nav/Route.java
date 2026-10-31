@@ -14,7 +14,11 @@ public enum Route {
 
     SCHEDULE_EDIT("schedule-edit.fxml", "일정 편집", true),
 
-    WISHLIST("wishlist.fxml", "공동 위시리스트", true);
+    WISHLIST("wishlist.fxml", "공동 위시리스트", true),
+
+    FRIENDS("placeholder.fxml", "친구", true),
+
+    SETTINGS("placeholder.fxml", "설정", true);
 
     private static final String VIEW_DIR = "/com/tripsync/view/";
 

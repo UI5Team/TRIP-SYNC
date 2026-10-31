@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox spacing="16" styleClass="page"
+<HBox spacing="14" styleClass="page"
       xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.tripsync.controller.TripDetailController">
 
-    <VBox minWidth="340" prefWidth="380" maxWidth="420" styleClass="panel">
+    <VBox minWidth="330" prefWidth="366" maxWidth="400" styleClass="panel">
 
         <HBox alignment="CENTER_LEFT" spacing="8" styleClass="panel-header">
-            <Label styleClass="panel-icon" text="🗓" />
+            <Label styleClass="panel-icon" text="📅" />
             <Label styleClass="section-title" text="일정" />
             <Region HBox.hgrow="ALWAYS" />
             <HBox fx:id="viewModeBar" spacing="0" styleClass="segmented" />
@@ -27,7 +28,7 @@
         <Separator styleClass="panel-divider" />
 
         <HBox alignment="CENTER_LEFT" spacing="8" styleClass="day-header">
-            <Label styleClass="panel-icon-small" text="🗓" />
+            <Label styleClass="panel-icon-small" text="📅" />
             <Label fx:id="dayHeaderLabel" styleClass="day-header-title" text="" />
             <Region HBox.hgrow="ALWAYS" />
             <Label fx:id="scheduleCountLabel" styleClass="section-caption" />
@@ -46,36 +47,46 @@
         </VBox>
     </VBox>
 
-    <BorderPane HBox.hgrow="ALWAYS" styleClass="panel">
+    <VBox spacing="14" HBox.hgrow="ALWAYS">
 
-        <top>
+        <VBox styleClass="panel" VBox.vgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10" styleClass="panel-header">
                 <VBox spacing="2">
                     <Label fx:id="tripTitleLabel" styleClass="detail-trip-title" text="여행" />
                     <Label fx:id="tripPeriodLabel" styleClass="section-caption" text="" />
                 </VBox>
                 <Region HBox.hgrow="ALWAYS" />
-                <HBox fx:id="filterBar" alignment="CENTER_RIGHT" spacing="7" />
+                <HBox fx:id="filterBar" alignment="CENTER_RIGHT" spacing="6" />
             </HBox>
-        </top>
 
-        <center>
-            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="detail-scroll">
+            <StackPane fx:id="mapHolder" styleClass="map-holder" VBox.vgrow="ALWAYS" />
+        </VBox>
+
+        <VBox minHeight="238" prefHeight="238" maxHeight="238" styleClass="panel">
+            <HBox alignment="CENTER_LEFT" spacing="0" styleClass="panel-header">
+                <Label styleClass="wish-star" text="★" />
+                <Label styleClass="section-title" text="공동 위시리스트">
+                    <HBox.margin>
+                        <Insets left="8" />
+                    </HBox.margin>
+                </Label>
+                <HBox fx:id="wishTabBar" alignment="CENTER_LEFT" spacing="6">
+                    <HBox.margin>
+                        <Insets left="14" />
+                    </HBox.margin>
+                </HBox>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id="manageWishlistButton" styleClass="button-secondary" text="＋ 장소 추가" />
+            </HBox>
+
+            <ScrollPane fitToHeight="true" hbarPolicy="AS_NEEDED" vbarPolicy="NEVER"
+                        styleClass="wish-scroll" VBox.vgrow="ALWAYS">
                 <content>
-                    <VBox fx:id="detailBox" spacing="16" styleClass="panel-body" />
+                    <HBox fx:id="wishStrip" spacing="12" styleClass="wish-strip" />
                 </content>
             </ScrollPane>
-        </center>
+        </VBox>
 
-        <bottom>
-            <HBox alignment="CENTER_LEFT" spacing="10" styleClass="panel-footer">
-                <Label fx:id="detailHintLabel" styleClass="section-caption" text="" />
-                <Region HBox.hgrow="ALWAYS" />
-                <Button fx:id="openWishlistButton" styleClass="button-ghost" text="위시리스트 열기" />
-                <Button fx:id="editScheduleButton" styleClass="button-secondary" text="수정" />
-                <Button fx:id="deleteScheduleButton" styleClass="button-danger" text="삭제" />
-            </HBox>
-        </bottom>
-    </BorderPane>
+    </VBox>
 
 </HBox>

@@ -24,9 +24,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 public class GroupDetailController implements RoutedController {
@@ -34,7 +36,10 @@ public class GroupDetailController implements RoutedController {
     @FXML private Label groupNameLabel;
     @FXML private Label inviteCodeLabel;
     @FXML private Button copyCodeButton;
+    @FXML private Button deleteGroupButton;
     @FXML private Label memberLabel;
+    @FXML private Label memberCountLabel;
+    @FXML private FlowPane memberBox;
     @FXML private Label tripCountLabel;
     @FXML private Button createTripButton;
     @FXML private VBox tripListBox;
@@ -49,6 +54,7 @@ public class GroupDetailController implements RoutedController {
             }
         });
         copyCodeButton.setOnAction(e -> copyInviteCode());
+        deleteGroupButton.setOnAction(e -> handleDeleteGroup());
     }
 
     @Override
@@ -67,6 +73,7 @@ public class GroupDetailController implements RoutedController {
         inviteCodeLabel.setText(group.inviteCode());
         createTripButton.setDisable(false);
         copyCodeButton.setDisable(false);
+        deleteGroupButton.setDisable(false);
 
         renderMembers();
         renderTrips();
@@ -86,19 +93,48 @@ public class GroupDetailController implements RoutedController {
     }
 
     private void renderMembers() {
+        memberBox.getChildren().clear();
+
         try {
             List<String> names = GroupRepository.findMemberNames(group.id());
 
-            String summary = names.size() <= 3
-                    ? String.join(", ", names)
-                    : String.join(", ", names.subList(0, 3)) + " 외 " + (names.size() - 3) + "명";
+            memberLabel.setText("초대 코드를 입력하면 이 모임에 참여할 수 있습니다.");
+            memberCountLabel.setText(names.size() + "명");
 
-            memberLabel.setText("참여자 " + names.size() + "명 · " + summary
-                    + "  —  이 코드를 입력하면 모임에 참여할 수 있습니다.");
+            for (String name : names) {
+                memberBox.getChildren().add(memberChip(name));
+            }
 
         } catch (DataAccessException e) {
             memberLabel.setText("참여자 정보를 불러오지 못했습니다.");
+            memberCountLabel.setText("");
         }
+    }
+
+    private Node memberChip(String name) {
+        String initial = name.isBlank() ? "?" : name.substring(0, 1);
+
+        Label avatarText = new Label(initial);
+        avatarText.getStyleClass().add("member-avatar-text");
+
+        StackPane avatar = new StackPane(avatarText);
+        avatar.getStyleClass().addAll("member-avatar", avatarStyle(name));
+        avatar.setMinSize(26, 26);
+        avatar.setPrefSize(26, 26);
+        avatar.setMaxSize(26, 26);
+
+        Label label = new Label(name);
+        label.getStyleClass().add("member-name");
+
+        HBox chip = new HBox(8, avatar, label);
+        chip.setAlignment(Pos.CENTER_LEFT);
+        chip.getStyleClass().add("member-chip");
+        return chip;
+    }
+
+    private String avatarStyle(String name) {
+        int index = Math.floorMod(name.hashCode(), 5);
+        return "member-avatar-" + index;
     }
 
     private void renderTrips() {
@@ -166,12 +202,13 @@ public class GroupDetailController implements RoutedController {
     }
 
     private void handleDelete(Trip trip) {
-        String message = TripRepository.hasContent(trip.id())
-                ? "'" + trip.title() + "' 여행을 삭제하면 그 안의 일정과 위시리스트도 함께 사라집니다.\n"
-                        + "이 작업은 되돌릴 수 없습니다."
-                : "'" + trip.title() + "' 여행을 삭제합니다.";
+        boolean hasContent = TripRepository.hasContent(trip.id());
+        String message = "'" + trip.title() + "' 여행을 삭제합니다.";
+        String detail = hasContent
+                ? "이 여행에 등록한 일정과 위시리스트도 함께 사라집니다. 되돌릴 수 없습니다."
+                : "되돌릴 수 없습니다.";
 
-        if (!Dialogs.confirm("여행 삭제", message, "삭제")) {
+        if (!Dialogs.confirm("여행 삭제", message, detail, "삭제")) {
             return;
         }
 
@@ -192,6 +229,7 @@ public class GroupDetailController implements RoutedController {
         tripCountLabel.setText("");
         createTripButton.setDisable(true);
         copyCodeButton.setDisable(true);
+        deleteGroupButton.setDisable(true);
 
         tripListBox.getChildren().clear();
         tripListBox.getChildren().add(EmptyState
@@ -199,6 +237,32 @@ public class GroupDetailController implements RoutedController {
                         "모임 목록으로 돌아가 다시 선택해 주세요.")
                 .primary("모임 목록으로", () -> Router.resetTo(Route.GROUP_LIST, null))
                 .build());
+    }
+
+    private void handleDeleteGroup() {
+        if (group == null) {
+            return;
+        }
+
+        int tripCount = GroupRepository.countTrips(group.id());
+        String detail = tripCount > 0
+                ? "이 모임의 여행 " + tripCount + "개와 그 안의 일정, 위시리스트가 모두 사라집니다. 되돌릴 수 없습니다."
+                : "모임과 참여자 정보가 사라집니다. 되돌릴 수 없습니다.";
+
+        if (!Dialogs.confirm("모임 삭제",
+                "'" + group.name() + "' 모임을 삭제합니다.", detail, "삭제")) {
+            return;
+        }
+
+        try {
+            String name = group.name();
+            GroupRepository.delete(group.id());
+            AppContext.clear();
+            Toast.success("'" + name + "' 모임을 삭제했습니다.");
+            Router.resetTo(Route.GROUP_LIST, null);
+        } catch (DataAccessException e) {
+            Toast.warn(e.getMessage());
+        }
     }
 
     private void copyInviteCode() {

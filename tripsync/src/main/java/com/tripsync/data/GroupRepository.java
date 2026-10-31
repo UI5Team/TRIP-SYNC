@@ -148,6 +148,28 @@ public final class GroupRepository {
         }
     }
 
+    public static void delete(long groupId) {
+        try (PreparedStatement ps = Database.connection()
+                .prepareStatement("DELETE FROM travel_group WHERE group_id = ?")) {
+            ps.setLong(1, groupId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("모임을 삭제하지 못했습니다.", e);
+        }
+    }
+
+    public static int countTrips(long groupId) {
+        String sql = "SELECT COUNT(*) FROM trip WHERE group_id = ?";
+        try (PreparedStatement ps = Database.connection().prepareStatement(sql)) {
+            ps.setLong(1, groupId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("모임의 여행 수를 확인하지 못했습니다.", e);
+        }
+    }
+
     public static List<String> findMemberNames(long groupId) {
         String sql = """
                 SELECT  u.display_name

@@ -116,6 +116,20 @@ public final class SessionStore {
         add(tripId, date, LocalTime.of(19, 0), "저녁 식사", Category.FOOD, "우메다 맛집");
     }
 
+    public static void fillSampleWishes(long tripId) {
+        wish(tripId, "오사카성", Category.SIGHT, "천수각 전망대");
+        wish(tripId, "도톤보리", Category.FOOD, "글리코 간판 앞");
+        wish(tripId, "우메다 스카이빌딩", Category.SIGHT, "야경 추천");
+        wish(tripId, "난바 쇼핑거리", Category.SHOP, "기념품");
+        wish(tripId, "신사이바시 카페", Category.CAFE, "아침 일찍 오픈");
+    }
+
+    private static void wish(long tripId, String placeName, Category category, String note) {
+        if (!hasWish(tripId, placeName)) {
+            addWish(tripId, placeName, category, note);
+        }
+    }
+
     private static void add(long tripId, LocalDate date, LocalTime time,
                             String placeName, Category category, String memo) {
         addSchedule(new ScheduleItem(ScheduleItem.UNSAVED, tripId, date, time, placeName, category, memo));

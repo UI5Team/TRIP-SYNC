@@ -18,8 +18,10 @@ import com.tripsync.util.Dates;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -27,27 +29,28 @@ import javafx.scene.layout.VBox;
 
 public class Sidebar extends VBox {
 
+    private static final double CONTENT_WIDTH = AppBar.BRAND_WIDTH - 48;
+
     private final VBox navBox = new VBox(2);
-    private final VBox listBox = new VBox(2);
+    private final VBox listBox = new VBox(3);
     private final Label listTitle = new Label();
-    private final Button listBackButton = new Button("모든 모임");
-    private final Button listAddButton = new Button();
+    private final Button listAddButton = new Button("＋");
+    private final Button listBackButton = new Button("‹ 모든 모임");
+    private final VBox listHeader = new VBox(4);
 
     public Sidebar() {
         getStyleClass().add("sidebar");
         setPrefWidth(AppBar.BRAND_WIDTH);
         setMinWidth(AppBar.BRAND_WIDTH);
         setMaxWidth(AppBar.BRAND_WIDTH);
-
-        getChildren().addAll(
-                navBox,
-                buildSeparator(),
-                buildListHeader(),
-                buildListScroller());
+        setFillWidth(true);
 
         navBox.getStyleClass().add("sidebar-nav");
+        navBox.setFillWidth(true);
         listBox.getStyleClass().add("sidebar-group-list");
+        listBox.setFillWidth(true);
 
+        getChildren().addAll(navBox, buildSeparator(), buildListHeader(), buildListScroller());
         refresh();
     }
 
@@ -64,22 +67,25 @@ public class Sidebar extends VBox {
 
     private Region buildListHeader() {
         listTitle.getStyleClass().add("sidebar-section-title");
+        listTitle.setTextOverrun(OverrunStyle.ELLIPSIS);
 
-        listBackButton.getStyleClass().add("sidebar-add-button");
+        listAddButton.getStyleClass().add("sidebar-add-button");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox topRow = new HBox(6, listTitle, spacer, listAddButton);
+        topRow.setAlignment(Pos.CENTER_LEFT);
+
+        listBackButton.getStyleClass().add("sidebar-back-link");
         listBackButton.setOnAction(e -> {
             AppContext.clear();
             Router.resetTo(Route.GROUP_LIST, null);
         });
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        listAddButton.getStyleClass().add("sidebar-add-button");
-
-        HBox row = new HBox(6, listTitle, listBackButton, spacer, listAddButton);
-        row.setAlignment(Pos.CENTER_LEFT);
-        row.getStyleClass().add("sidebar-section-header");
-        return row;
+        listHeader.getChildren().addAll(topRow, listBackButton);
+        listHeader.getStyleClass().add("sidebar-section-header");
+        return listHeader;
     }
 
     private Region buildListScroller() {
@@ -99,36 +105,59 @@ public class Sidebar extends VBox {
         Optional<Long> tripId = AppContext.currentTripId();
 
         navBox.getChildren().add(navItem("⌂", "홈",
-                active == Route.GROUP_LIST || active == Route.GROUP_CREATE,
-                true,
-                () -> Router.resetTo(Route.GROUP_LIST, null)));
+                active == Route.GROUP_LIST || active == Route.GROUP_CREATE, true,
+                () -> Router.resetTo(Route.GROUP_LIST, null),
+                null));
 
-        navBox.getChildren().add(navItem("👜", "내 여행",
+        navBox.getChildren().add(navItem("🧳", "내 여행",
                 active == Route.GROUP_DETAIL || active == Route.TRIP_CREATE,
                 groupId.isPresent(),
-                () -> groupId.ifPresent(id -> Router.navigate(Route.GROUP_DETAIL, id))));
+                () -> groupId.ifPresent(id -> Router.navigate(Route.GROUP_DETAIL, id)),
+                "모임을 먼저 선택하세요"));
 
-        navBox.getChildren().add(navItem("🗓", "일정",
+        navBox.getChildren().add(navItem("📅", "캘린더",
                 active == Route.TRIP_DETAIL || active == Route.SCHEDULE_EDIT,
                 tripId.isPresent(),
-                () -> tripId.ifPresent(id -> Router.navigate(Route.TRIP_DETAIL, id))));
+                () -> tripId.ifPresent(id -> Router.navigate(Route.TRIP_DETAIL, id)),
+                "여행을 먼저 선택하세요"));
+
+        navBox.getChildren().add(navItem("🗺", "지도",
+                false,
+                tripId.isPresent(),
+                () -> tripId.ifPresent(id -> Router.navigate(Route.TRIP_DETAIL, id)),
+                "여행을 먼저 선택하세요"));
 
         navBox.getChildren().add(navItem("♡", "위시리스트",
                 active == Route.WISHLIST,
                 tripId.isPresent(),
-                () -> tripId.ifPresent(id -> Router.navigate(Route.WISHLIST, id))));
+                () -> tripId.ifPresent(id -> Router.navigate(Route.WISHLIST, id)),
+                "여행을 먼저 선택하세요"));
+
+        navBox.getChildren().add(navItem("👥", "친구",
+                active == Route.FRIENDS, true,
+                () -> Router.navigate(Route.FRIENDS, "친구"),
+                null));
+
+        navBox.getChildren().add(navItem("⚙", "설정",
+                active == Route.SETTINGS, true,
+                () -> Router.navigate(Route.SETTINGS, "설정"),
+                null));
     }
 
-    private Region navItem(String icon, String text, boolean active, boolean enabled, Runnable action) {
+    private Region navItem(String icon, String text, boolean active, boolean enabled,
+                           Runnable action, String disabledHint) {
         Label iconLabel = new Label(icon);
         iconLabel.getStyleClass().add("nav-icon");
 
         Label textLabel = new Label(text);
         textLabel.getStyleClass().add("nav-text");
+        textLabel.setTextOverrun(OverrunStyle.ELLIPSIS);
 
         HBox row = new HBox(12, iconLabel, textLabel);
         row.setAlignment(Pos.CENTER_LEFT);
         row.getStyleClass().add("nav-item");
+        row.setMaxWidth(Double.MAX_VALUE);
+
         if (active) {
             row.getStyleClass().add("nav-item-active");
         }
@@ -136,6 +165,9 @@ public class Sidebar extends VBox {
             row.setOnMouseClicked(e -> action.run());
         } else {
             row.getStyleClass().add("nav-item-disabled");
+            if (disabledHint != null) {
+                Tooltip.install(row, new Tooltip(disabledHint));
+            }
         }
         return row;
     }
@@ -147,15 +179,18 @@ public class Sidebar extends VBox {
         boolean showingTrips = openGroupId.isPresent();
 
         listTitle.setText(showingTrips ? "내 여행 목록" : "내 모임");
-        listAddButton.setText(showingTrips ? "＋ 여행 추가" : "＋ 모임 추가");
+        listTitle.setMaxWidth(CONTENT_WIDTH - 34);
+
         listBackButton.setVisible(showingTrips);
         listBackButton.setManaged(showingTrips);
 
         if (showingTrips) {
             long groupId = openGroupId.get();
+            listAddButton.setTooltip(new Tooltip("여행 추가"));
             listAddButton.setOnAction(e -> Router.navigate(Route.TRIP_CREATE, groupId));
             renderTrips(groupId);
         } else {
+            listAddButton.setTooltip(new Tooltip("모임 추가"));
             listAddButton.setOnAction(e -> Router.navigate(Route.GROUP_CREATE));
             renderGroups();
         }
@@ -178,7 +213,8 @@ public class Sidebar extends VBox {
         for (Group group : groups) {
             listBox.getChildren().add(listItem(
                     group.name(),
-                    "참여자 " + group.memberCount() + "명 · " + group.inviteCode(),
+                    "참여자 " + group.memberCount() + "명",
+                    group.inviteCode(),
                     false,
                     () -> Router.navigate(Route.GROUP_DETAIL, group.id())));
         }
@@ -203,23 +239,38 @@ public class Sidebar extends VBox {
             listBox.getChildren().add(listItem(
                     trip.title(),
                     Dates.period(trip.startDate(), trip.endDate()),
+                    null,
                     Long.valueOf(trip.id()).equals(activeTripId),
                     () -> Router.navigate(Route.TRIP_DETAIL, trip.id())));
         }
     }
 
-    private Region listItem(String name, String meta, boolean active, Runnable onOpen) {
+    private Region listItem(String name, String meta, String tag, boolean active, Runnable onOpen) {
         Label nameLabel = new Label(name);
         nameLabel.getStyleClass().add("sidebar-group-name");
+        nameLabel.setTextOverrun(OverrunStyle.ELLIPSIS);
+        nameLabel.setMaxWidth(CONTENT_WIDTH);
 
         Label metaLabel = new Label(meta);
         metaLabel.getStyleClass().add("sidebar-group-meta");
+        metaLabel.setTextOverrun(OverrunStyle.ELLIPSIS);
+        metaLabel.setMaxWidth(CONTENT_WIDTH);
 
         VBox box = new VBox(2, nameLabel, metaLabel);
+        box.setFillWidth(true);
+        box.setMaxWidth(Double.MAX_VALUE);
         box.getStyleClass().add("sidebar-group-item");
+
+        if (tag != null) {
+            Label tagLabel = new Label(tag);
+            tagLabel.getStyleClass().add("sidebar-group-tag");
+            box.getChildren().add(tagLabel);
+        }
         if (active) {
             box.getStyleClass().add("sidebar-group-item-active");
         }
+
+        Tooltip.install(box, new Tooltip(name + "\n" + meta));
         box.setOnMouseClicked(e -> onOpen.run());
         return box;
     }
@@ -228,6 +279,7 @@ public class Sidebar extends VBox {
         Label label = new Label(text);
         label.getStyleClass().add("sidebar-hint");
         label.setWrapText(true);
+        label.setMaxWidth(CONTENT_WIDTH);
         return label;
     }
 }

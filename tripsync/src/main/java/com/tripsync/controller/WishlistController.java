@@ -1,12 +1,18 @@
 package com.tripsync.controller;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
+import com.tripsync.data.SessionStore;
+import com.tripsync.model.Category;
+import com.tripsync.model.WishlistItem;
 import com.tripsync.nav.AppContext;
+import com.tripsync.nav.Route;
 import com.tripsync.nav.RoutedController;
 import com.tripsync.nav.Router;
+import com.tripsync.ui.Dialogs;
 import com.tripsync.ui.EmptyState;
 import com.tripsync.ui.Toast;
 
@@ -16,126 +22,205 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 public class WishlistController implements RoutedController {
 
     private static final int MAX_PLACE_LENGTH = 50;
+    private static final double CARD_WIDTH = 210;
 
     @FXML private Label tripContextLabel;
     @FXML private TextField placeNameField;
+    @FXML private ComboBox<String> categoryComboBox;
     @FXML private TextField noteField;
     @FXML private Button addButton;
     @FXML private Label addErrorLabel;
-
-    @FXML private Label wishCountLabel;
-    @FXML private VBox wishListBox;
-
-    @FXML private Label selectedPlaceLabel;
-    @FXML private DatePicker registerDatePicker;
-    @FXML private ComboBox<String> registerTimeComboBox;
-    @FXML private Label registerErrorLabel;
-    @FXML private Button registerButton;
-
-    private String tripTitle = "여행";
+    @FXML private HBox tabBar;
+    @FXML private Button sampleButton;
+    @FXML private FlowPane wishGrid;
 
     private Long tripId;
-
-    private final List<WishItem> wishes = new ArrayList<>();
-    private WishItem selected;
-
-    private record WishItem(String placeName, String note) {
-    }
+    private String tripTitle = "여행";
+    private Category activeTab;
 
     @FXML
     private void initialize() {
-        registerTimeComboBox.setItems(FXCollections.observableArrayList(buildTimeOptions()));
+        List<String> labels = new ArrayList<>();
+        for (Category category : Category.values()) {
+            labels.add(category.label());
+        }
+        categoryComboBox.setItems(FXCollections.observableArrayList(labels));
+        categoryComboBox.setValue(Category.SIGHT.label());
 
         addButton.setOnAction(e -> handleAdd());
         placeNameField.setOnAction(e -> handleAdd());
+        noteField.setOnAction(e -> handleAdd());
         placeNameField.textProperty().addListener((obs, old, now) -> hideAddError());
 
-        registerButton.setOnAction(e -> handleRegister());
-
-        updateSelection(null);
+        sampleButton.setOnAction(e -> {
+            if (tripId == null) {
+                return;
+            }
+            SessionStore.fillSampleWishes(tripId);
+            Toast.success("샘플 후보 장소를 채웠습니다.");
+            render();
+        });
     }
 
     @Override
     public void onEnter(Object param) {
-
         tripId = param instanceof Long id ? id : AppContext.currentTripId().orElse(null);
         tripTitle = AppContext.currentTripTitle().orElse("여행");
+        activeTab = null;
 
-        tripContextLabel.setText("'" + tripTitle + "' 여행의 후보 장소입니다. 모임원이 함께 보는 목록입니다.");
-        renderWishes();
+        boolean ready = tripId != null;
+        addButton.setDisable(!ready);
+        sampleButton.setDisable(!ready);
+        placeNameField.setDisable(!ready);
+        noteField.setDisable(!ready);
+        categoryComboBox.setDisable(!ready);
+
+        tripContextLabel.setText(ready
+                ? "'" + tripTitle + "' 여행의 후보 장소입니다. 모임원이 함께 보는 목록입니다."
+                : "여행을 먼저 선택해 주세요.");
+
+        hideAddError();
+        render();
     }
 
-    private static List<String> buildTimeOptions() {
-        List<String> options = new ArrayList<>();
-        for (int hour = 6; hour <= 23; hour++) {
-            options.add(String.format("%02d:00", hour));
-            options.add(String.format("%02d:30", hour));
+    private void render() {
+        renderTabs();
+        renderGrid();
+    }
+
+    private Map<Category, Integer> counts() {
+        Map<Category, Integer> counts = new LinkedHashMap<>();
+        if (tripId == null) {
+            return counts;
         }
-        return options;
+        for (WishlistItem item : SessionStore.wishesOf(tripId)) {
+            counts.merge(item.category(), 1, Integer::sum);
+        }
+        return counts;
     }
 
-    private void renderWishes() {
-        wishListBox.getChildren().clear();
-        wishCountLabel.setText(wishes.isEmpty() ? "" : wishes.size() + "곳");
+    private void renderTabs() {
+        tabBar.getChildren().clear();
+        if (tripId == null) {
+            return;
+        }
 
-        if (wishes.isEmpty()) {
-            wishListBox.getChildren().add(EmptyState
-                    .of("후보 장소가 없습니다",
+        int total = SessionStore.wishesOf(tripId).size();
+        tabBar.getChildren().add(tab("전체 (" + total + ")", null));
+
+        for (Map.Entry<Category, Integer> entry : counts().entrySet()) {
+            tabBar.getChildren().add(tab(
+                    entry.getKey().label() + " (" + entry.getValue() + ")",
+                    entry.getKey()));
+        }
+    }
+
+    private Node tab(String text, Category category) {
+        Label label = new Label(text);
+        label.getStyleClass().add("wish-tab-label");
+
+        StackPane chip = new StackPane(label);
+        chip.getStyleClass().add("wish-tab");
+        if (category == activeTab) {
+            chip.getStyleClass().add("wish-tab-active");
+        }
+        chip.setOnMouseClicked(e -> {
+            activeTab = category;
+            render();
+        });
+        return chip;
+    }
+
+    private void renderGrid() {
+        wishGrid.getChildren().clear();
+
+        if (tripId == null) {
+            wishGrid.getChildren().add(EmptyState
+                    .of("여행이 선택되지 않았습니다", "모임에서 여행을 연 뒤 위시리스트를 사용할 수 있습니다.")
+                    .primary("모임 목록으로", () -> Router.resetTo(Route.GROUP_LIST, null))
+                    .build());
+            return;
+        }
+
+        List<WishlistItem> items = new ArrayList<>();
+        for (WishlistItem item : SessionStore.wishesOf(tripId)) {
+            if (activeTab == null || item.category() == activeTab) {
+                items.add(item);
+            }
+        }
+
+        if (items.isEmpty()) {
+            wishGrid.getChildren().add(EmptyState
+                    .of(activeTab == null ? "후보 장소가 없습니다" : "이 분류에 후보가 없습니다",
                             "위 입력란에 가고 싶은 곳의 이름을 적고 추가해 보세요.")
                     .primary("장소 입력하기", () -> placeNameField.requestFocus())
                     .build());
             return;
         }
 
-        for (WishItem wish : wishes) {
-            wishListBox.getChildren().add(buildWishRow(wish));
+        for (WishlistItem item : items) {
+            wishGrid.getChildren().add(card(item));
         }
     }
 
-    private Node buildWishRow(WishItem wish) {
-        Label name = new Label(wish.placeName());
-        name.getStyleClass().add("card-title");
+    private Node card(WishlistItem item) {
+        Label name = new Label(item.placeName());
+        name.getStyleClass().add("wish-card-title");
+        name.setTextOverrun(OverrunStyle.ELLIPSIS);
+        name.setMaxWidth(CARD_WIDTH - 32);
 
-        VBox texts = new VBox(3, name);
-        if (!wish.note().isBlank()) {
-            Label note = new Label(wish.note());
-            note.getStyleClass().add("card-meta");
-            note.setWrapText(true);
-            texts.getChildren().add(note);
-        }
+        Label badge = new Label(item.category().label());
+        badge.getStyleClass().addAll("category-badge", item.category().styleClass());
+
+        Label note = new Label(item.hasNote() ? item.note() : "메모 없음");
+        note.getStyleClass().add("wish-card-note");
+        note.setWrapText(true);
+        note.setMaxWidth(CARD_WIDTH - 32);
+
+        Button addToSchedule = new Button("일정에 추가");
+        addToSchedule.getStyleClass().add("wish-card-button");
+        addToSchedule.setMaxWidth(Double.MAX_VALUE);
+        addToSchedule.setOnAction(e -> Router.navigate(Route.SCHEDULE_EDIT,
+                new ScheduleEditController.Request(tripId, null, null, item)));
+
+        Button remove = new Button("삭제");
+        remove.getStyleClass().add("wish-card-delete");
+        remove.setOnAction(e -> handleDelete(item));
+
+        HBox actions = new HBox(7, addToSchedule, remove);
+        HBox.setHgrow(addToSchedule, Priority.ALWAYS);
+        actions.setAlignment(Pos.CENTER_LEFT);
 
         Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        VBox.setVgrow(spacer, Priority.ALWAYS);
 
-        Button selectButton = new Button(wish.equals(selected) ? "선택됨" : "선택");
-        selectButton.getStyleClass().add(wish.equals(selected) ? "button-secondary" : "button-ghost");
-        selectButton.setOnAction(e -> {
-            updateSelection(wish);
-            renderWishes();
-        });
-
-        Button deleteButton = new Button("삭제");
-        deleteButton.getStyleClass().add("button-danger");
-        deleteButton.setOnAction(e -> handleDelete(wish));
-
-        HBox row = new HBox(10, texts, spacer, selectButton, deleteButton);
-        row.setAlignment(Pos.CENTER_LEFT);
-        row.getStyleClass().add("card");
-        return row;
+        VBox card = new VBox(7, name, badge, note, spacer, actions);
+        card.getStyleClass().add("wish-card");
+        card.setPrefWidth(CARD_WIDTH);
+        card.setMinWidth(CARD_WIDTH);
+        card.setMinHeight(168);
+        return card;
     }
 
     private void handleAdd() {
+        if (tripId == null) {
+            Toast.warn("여행을 먼저 선택해 주세요.");
+            return;
+        }
+
         String placeName = placeNameField.getText() == null ? "" : placeNameField.getText().trim();
         String note = noteField.getText() == null ? "" : noteField.getText().trim();
 
@@ -147,56 +232,34 @@ public class WishlistController implements RoutedController {
             showAddError("장소명은 " + MAX_PLACE_LENGTH + "자 이내로 입력해 주세요.");
             return;
         }
-        boolean duplicate = wishes.stream()
-                .anyMatch(w -> w.placeName().equalsIgnoreCase(placeName));
-        if (duplicate) {
+        if (SessionStore.hasWish(tripId, placeName)) {
             showAddError("이미 목록에 있는 장소입니다.");
             return;
         }
 
-        wishes.add(new WishItem(placeName, note));
+        Category category = Category.fromLabel(categoryComboBox.getValue());
+        SessionStore.addWish(tripId, placeName, category, note);
 
         placeNameField.clear();
         noteField.clear();
         hideAddError();
         placeNameField.requestFocus();
 
-        renderWishes();
-        Toast.success("'" + placeName + "'을(를) 후보에 추가했습니다.");
+        activeTab = null;
+        render();
+        Toast.success("'" + placeName + "' 을(를) 후보에 추가했습니다.");
     }
 
-    private void handleDelete(WishItem wish) {
-        wishes.remove(wish);
-        if (wish.equals(selected)) {
-            updateSelection(null);
-        }
-        renderWishes();
-        Toast.success("'" + wish.placeName() + "'을(를) 목록에서 삭제했습니다.");
-    }
-
-    private void updateSelection(WishItem wish) {
-        selected = wish;
-        selectedPlaceLabel.setText(wish == null ? "선택된 장소 없음" : wish.placeName());
-        registerButton.setDisable(wish == null);
-        hideRegisterError();
-    }
-
-    private void handleRegister() {
-        if (selected == null) {
-            showRegisterError("먼저 등록할 장소를 선택해 주세요.");
+    private void handleDelete(WishlistItem item) {
+        if (!Dialogs.confirm("후보 장소 삭제",
+                "'" + item.placeName() + "' 을(를) 위시리스트에서 삭제합니다.",
+                "이미 일정에 등록한 항목은 그대로 남습니다.",
+                "삭제")) {
             return;
         }
-        LocalDate date = registerDatePicker.getValue();
-        if (date == null) {
-            showRegisterError("등록할 날짜를 선택해 주세요.");
-            return;
-        }
-
-        String rawTime = registerTimeComboBox.getEditor().getText();
-        String when = (rawTime == null || rawTime.isBlank()) ? "시간 미정" : rawTime.trim();
-
-        Toast.success("'" + selected.placeName() + "'을(를) " + date + " " + when + " 일정으로 등록했습니다.");
-        Router.back();
+        SessionStore.deleteWish(tripId, item.id());
+        Toast.success("후보 장소를 삭제했습니다.");
+        render();
     }
 
     private void showAddError(String message) {
@@ -213,16 +276,5 @@ public class WishlistController implements RoutedController {
         addErrorLabel.setVisible(false);
         addErrorLabel.setManaged(false);
         placeNameField.getStyleClass().remove("field-error");
-    }
-
-    private void showRegisterError(String message) {
-        registerErrorLabel.setText(message);
-        registerErrorLabel.setVisible(true);
-        registerErrorLabel.setManaged(true);
-    }
-
-    private void hideRegisterError() {
-        registerErrorLabel.setVisible(false);
-        registerErrorLabel.setManaged(false);
     }
 }
