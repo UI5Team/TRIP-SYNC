@@ -29,12 +29,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
-/**
- * 화면 3 — 모임 상세 및 여행 목록.
- *
- * <p>모임 하나에 여행을 여러 개 둘 수 있다. 여행 카드를 누르면 그 여행의 상세로
- * 들어가고, 편집은 설계서 정책대로 한 번에 한 여행씩만 한다.</p>
- */
 public class GroupDetailController implements RoutedController {
 
     @FXML private Label groupNameLabel;
@@ -78,7 +72,6 @@ public class GroupDetailController implements RoutedController {
         renderTrips();
     }
 
-    /** 이전 화면이 넘겨준 모임 id 로 모임을 읽어온다. */
     private Optional<Group> loadGroup(Object param) {
         Long groupId = param instanceof Long id ? id : AppContext.currentGroupId().orElse(null);
         if (groupId == null) {
@@ -92,7 +85,6 @@ public class GroupDetailController implements RoutedController {
         }
     }
 
-    /** 참여자 이름을 나열한다. 이름이 많으면 뒤는 "외 N명"으로 줄인다. */
     private void renderMembers() {
         try {
             List<String> names = GroupRepository.findMemberNames(group.id());
@@ -109,7 +101,6 @@ public class GroupDetailController implements RoutedController {
         }
     }
 
-    /** 저장소에서 이 모임의 여행을 다시 읽어 그린다. */
     private void renderTrips() {
         tripListBox.getChildren().clear();
 
@@ -127,7 +118,6 @@ public class GroupDetailController implements RoutedController {
 
         tripCountLabel.setText(trips.isEmpty() ? "" : trips.size() + "개");
 
-        // 설계서 10장: 모임에 여행이 없을 때의 안내
         if (trips.isEmpty()) {
             tripListBox.getChildren().add(EmptyState
                     .of("아직 여행이 없습니다",
@@ -142,13 +132,6 @@ public class GroupDetailController implements RoutedController {
         }
     }
 
-    /**
-     * 여행 카드 하나.
-     *
-     * <p>카드 전체가 상세로 가는 버튼이고, 삭제만 따로 떼어 놓았다.
-     * 삭제 버튼을 눌렀을 때 카드 클릭까지 함께 발생하지 않도록
-     * 이벤트 전파를 끊는다.</p>
-     */
     private Node buildTripCard(Trip trip) {
         Label title = new Label(trip.title());
         title.getStyleClass().add("card-title");
@@ -182,12 +165,6 @@ public class GroupDetailController implements RoutedController {
         return row;
     }
 
-    /**
-     * 여행 삭제.
-     *
-     * <p>일정이나 위시리스트가 들어 있으면 함께 사라진다는 점을 먼저 알린다.
-     * 되돌릴 수 없는 작업이라 확인 없이 지우지 않는다.</p>
-     */
     private void handleDelete(Trip trip) {
         String message = TripRepository.hasContent(trip.id())
                 ? "'" + trip.title() + "' 여행을 삭제하면 그 안의 일정과 위시리스트도 함께 사라집니다.\n"
@@ -207,7 +184,6 @@ public class GroupDetailController implements RoutedController {
         }
     }
 
-    /** 모임을 찾지 못한 경우 (삭제됐거나 번호가 잘못됨) */
     private void showMissingGroup() {
         group = null;
         groupNameLabel.setText("모임을 찾을 수 없습니다");
@@ -225,7 +201,6 @@ public class GroupDetailController implements RoutedController {
                 .build());
     }
 
-    /** 초대 코드를 클립보드에 복사한다. 네트워크를 쓰지 않는 OS 기본 기능이다. */
     private void copyInviteCode() {
         if (group == null) {
             return;

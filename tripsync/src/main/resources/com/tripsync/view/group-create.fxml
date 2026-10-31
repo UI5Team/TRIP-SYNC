@@ -7,10 +7,6 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<!--
-  화면 2 — 모임 생성
-  설계서 7장: 필수 입력은 모임 이름, 초대 코드는 자동 생성.
--->
 <VBox alignment="TOP_CENTER" styleClass="page"
       xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.tripsync.controller.GroupCreateController">
@@ -25,7 +21,6 @@
 
         <VBox spacing="18" styleClass="card">
 
-            <!-- 모임 이름 (필수) -->
             <VBox spacing="7">
                 <HBox alignment="CENTER_LEFT" spacing="4">
                     <Label styleClass="field-label" text="모임 이름" />
@@ -35,7 +30,6 @@
                 <Label fx:id="nameErrorLabel" managed="false" styleClass="error-text" visible="false" />
             </VBox>
 
-            <!-- 초대 코드 안내 -->
             <VBox spacing="7">
                 <Label styleClass="field-label" text="초대 코드" />
                 <Label styleClass="page-subtitle" wrapText="true"

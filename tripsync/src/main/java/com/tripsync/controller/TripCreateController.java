@@ -18,12 +18,6 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 
-/**
- * 화면 4 — 여행 생성.
- *
- * <p>설계서 7장: 여행명·시작일·종료일이 모두 필수이고, 종료일은 시작일보다 빠를 수 없다.
- * 날짜를 고르는 즉시 "3박 4일" 이 계산돼 보이므로, 저장을 눌러야 잘못을 알게 되는 일이 없다.</p>
- */
 public class TripCreateController implements RoutedController {
 
     private static final int MAX_TITLE_LENGTH = 40;
@@ -38,7 +32,6 @@ public class TripCreateController implements RoutedController {
     @FXML private Button cancelButton;
     @FXML private Button submitButton;
 
-    /** 어느 모임에 여행을 추가하는지 */
     private Long groupId;
 
     @FXML
@@ -49,7 +42,6 @@ public class TripCreateController implements RoutedController {
         titleField.textProperty().addListener((obs, old, now) -> hideTitleError());
         titleField.setOnAction(e -> handleSubmit());
 
-        // 날짜를 고를 때마다 기간을 즉시 계산해 보여준다
         startDatePicker.valueProperty().addListener((obs, old, now) -> onDateChanged());
         endDatePicker.valueProperty().addListener((obs, old, now) -> onDateChanged());
     }
@@ -62,7 +54,6 @@ public class TripCreateController implements RoutedController {
                 .map(name -> "'" + name + "' 모임에 새 여행을 추가합니다.")
                 .orElse("모임에 새 여행을 추가합니다."));
 
-        // 어느 모임인지 모르면 저장할 수 없으므로 아예 막는다
         if (groupId == null) {
             groupContextLabel.setText("모임을 먼저 선택해 주세요. 모임 목록에서 모임을 연 뒤 여행을 만들 수 있습니다.");
             submitButton.setDisable(true);
@@ -79,7 +70,6 @@ public class TripCreateController implements RoutedController {
         titleField.requestFocus();
     }
 
-    /** 날짜가 바뀔 때마다 기간을 다시 계산하고 오류를 즉시 반영한다. */
     private void onDateChanged() {
         LocalDate start = startDatePicker.getValue();
         LocalDate end = endDatePicker.getValue();
@@ -109,7 +99,7 @@ public class TripCreateController implements RoutedController {
             Toast.warn("모임을 먼저 선택해 주세요.");
             return;
         }
-        // 설계서 7장 화면 4: 여행명은 비워 둘 수 없다
+
         if (title.isEmpty()) {
             showTitleError("여행명을 입력해 주세요.");
             return;
@@ -122,7 +112,7 @@ public class TripCreateController implements RoutedController {
             showDateError("시작일과 종료일을 모두 선택해 주세요.");
             return;
         }
-        // 설계서 10장: 종료일이 시작일보다 빠르면 날짜 입력 오류 메시지
+
         if (end.isBefore(start)) {
             showDateError("종료일은 시작일보다 빠를 수 없습니다.");
             return;
@@ -134,12 +124,11 @@ public class TripCreateController implements RoutedController {
             Toast.success("'" + created.title() + "' 여행을 만들었습니다. "
                     + Dates.period(start, end));
 
-            // 생성 화면은 히스토리에서 빼고 바로 여행 상세로 넘어간다
             Router.back();
             Router.navigate(Route.TRIP_DETAIL, created.id());
 
         } catch (DataAccessException e) {
-            // 설계서 10장: 저장 실패 → 입력값을 유지하고 재시도 안내
+
             showDateError(e.getMessage() + " 입력한 내용은 그대로 두었으니 다시 시도해 주세요.");
         }
     }

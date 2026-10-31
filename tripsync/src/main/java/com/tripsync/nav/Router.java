@@ -9,41 +9,22 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.layout.BorderPane;
 
-/**
- * 화면 이동을 한 곳에서 관리하는 라우터.
- *
- * <p>각 컨트롤러는 다른 화면의 컨트롤러를 직접 알 필요 없이
- * {@code Router.navigate(Route.TRIP_DETAIL, tripId)} 한 줄로 이동한다.
- * 화면 사이의 의존성이 라우터 하나로 모이므로 화면을 추가·교체하기 쉽다.</p>
- *
- * <p>앱 전체에 창이 하나뿐이고 화면 전환도 하나의 흐름이라, 인스턴스를 들고 다니는 대신
- * static 메서드로 제공한다.</p>
- */
 public final class Router {
 
-    /** 화면이 갈아끼워지는 자리(앱 셸의 center) */
     private static BorderPane shell;
 
-    /** 상단 바. 화면 이동마다 제목과 뒤로 버튼 상태를 갱신한다. */
     private static AppBar appBar;
 
-    /** 뒤로 가기용 히스토리 */
     private static final Deque<Entry> history = new ArrayDeque<>();
 
-    /** 현재 보여지고 있는 화면 */
     private static Entry current;
 
-    /**
-     * 화면이 바뀔 때마다 실행할 작업. 사이드바가 자신을 다시 그리기 위해 등록한다.
-     * 라우터가 사이드바를 직접 알지 않도록 콜백으로 둔다.
-     */
     private static Runnable navigationListener;
 
     private Router() {
-        // 유틸리티 클래스 — 인스턴스를 만들지 않는다
+
     }
 
-    /** 라우터가 사용할 셸과 상단 바를 등록한다. 앱 시작 시 한 번만 호출. */
     public static void init(BorderPane appShell, AppBar bar) {
         shell = appShell;
         appBar = bar;
@@ -51,27 +32,18 @@ public final class Router {
         current = null;
     }
 
-    /** 화면이 바뀔 때마다 호출될 작업을 등록한다. */
     public static void setNavigationListener(Runnable listener) {
         navigationListener = listener;
     }
 
-    /** 현재 보고 있는 화면. 아직 아무것도 열지 않았으면 비어 있다. */
     public static Route currentRoute() {
         return current == null ? null : current.route();
     }
 
-    /** 파라미터 없이 화면 이동 */
     public static void navigate(Route route) {
         navigate(route, null);
     }
 
-    /**
-     * 화면 이동.
-     *
-     * @param route 이동할 화면
-     * @param param 다음 화면에 넘길 값 (없으면 null)
-     */
     public static void navigate(Route route, Object param) {
         requireInitialized();
         if (current != null) {
@@ -80,9 +52,6 @@ public final class Router {
         show(new Entry(route, param));
     }
 
-    /**
-     * 뒤로 가기. 히스토리가 비어 있으면 모임 목록으로 돌아간다.
-     */
     public static void back() {
         requireInitialized();
         if (history.isEmpty()) {
@@ -93,12 +62,6 @@ public final class Router {
         show(history.pop());
     }
 
-    /**
-     * 현재 화면을 파라미터 그대로 다시 불러온다.
-     *
-     * <p>설계서의 "저장 후 다시 조회" 흐름에 쓴다. 저장이 끝난 뒤 이 메서드를 호출하면
-     * 화면이 저장소에서 최신 데이터를 다시 읽어 그린다. 히스토리는 늘어나지 않는다.</p>
-     */
     public static void reload() {
         requireInitialized();
         if (current != null) {
@@ -106,7 +69,6 @@ public final class Router {
         }
     }
 
-    /** 히스토리를 모두 비우고 지정한 화면을 시작점으로 삼는다. */
     public static void resetTo(Route route, Object param) {
         requireInitialized();
         history.clear();
@@ -114,7 +76,6 @@ public final class Router {
         show(new Entry(route, param));
     }
 
-    /** 실제로 FXML 을 읽어 화면에 붙이는 부분 */
     private static void show(Entry entry) {
         URL location = Router.class.getResource(entry.route.fxmlPath());
         if (location == null) {
@@ -152,7 +113,6 @@ public final class Router {
         }
     }
 
-    /** 화면 하나와 그 화면에 넘긴 파라미터를 묶어둔 기록 */
     private record Entry(Route route, Object param) {
     }
 }

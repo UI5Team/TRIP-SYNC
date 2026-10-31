@@ -12,11 +12,6 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<!--
-  화면 7 — 공동 위시리스트
-  설계서 7장: 장소명 텍스트로 후보를 모으고, 선택한 후보를 일정으로 등록한다.
-             지도 검색, 투표, 좋아요는 구현하지 않는다.
--->
 <BorderPane styleClass="page"
             xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.tripsync.controller.WishlistController">
@@ -28,7 +23,6 @@
                 <Label fx:id="tripContextLabel" styleClass="page-subtitle" text="" />
             </VBox>
 
-            <!-- 후보 장소 추가 -->
             <VBox spacing="8" styleClass="card">
                 <HBox alignment="CENTER_LEFT" spacing="10">
                     <HBox alignment="CENTER_LEFT" spacing="4">
@@ -51,7 +45,6 @@
     <center>
         <HBox spacing="16">
 
-            <!-- 후보 목록 -->
             <VBox styleClass="panel" HBox.hgrow="ALWAYS">
                 <HBox alignment="CENTER_LEFT" spacing="8" styleClass="panel-header">
                     <Label styleClass="section-title" text="후보 장소" />
@@ -64,7 +57,6 @@
                 </ScrollPane>
             </VBox>
 
-            <!-- 선택한 후보를 일정으로 등록 -->
             <VBox minWidth="280" prefWidth="330" styleClass="panel">
                 <HBox alignment="CENTER_LEFT" styleClass="panel-header">
                     <Label styleClass="section-title" text="일정에 등록" />

@@ -1,69 +1,81 @@
 package com.tripsync.controller;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import com.tripsync.data.DataAccessException;
+import com.tripsync.data.SessionStore;
 import com.tripsync.data.TripRepository;
+import com.tripsync.model.Category;
+import com.tripsync.model.ScheduleItem;
 import com.tripsync.model.Trip;
 import com.tripsync.nav.AppContext;
 import com.tripsync.nav.Route;
 import com.tripsync.nav.RoutedController;
 import com.tripsync.nav.Router;
+import com.tripsync.ui.Dialogs;
 import com.tripsync.ui.EmptyState;
+import com.tripsync.ui.MonthCalendar;
+import com.tripsync.ui.TimelineRow;
 import com.tripsync.ui.Toast;
 import com.tripsync.util.Dates;
 
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
-/**
- * 화면 5 — 여행 상세. 이 프로그램에서 가장 오래 머무르는 핵심 화면이다.
- *
- * <p>설계서 8장에 따라 좌(일정 목록)·중(일정 상세)·우(위시리스트) 3분할로 배치한다.
- * 모바일처럼 화면을 넘겨 다니지 않고, 한 화면에서 비교하며 편집하게 하는 것이 목적이다.</p>
- *
- * <p><b>[3단계]</b> 여행 정보와 날짜 탭은 저장된 여행에서 읽어온다.
- * 일정 CRUD 는 4단계, 위시리스트는 5단계에서 채운다.</p>
- */
 public class TripDetailController implements RoutedController {
+
+    private static final Category[] FILTERS = {
+            Category.FOOD, Category.SIGHT, Category.STAY, Category.MOVE
+    };
+
+    @FXML private HBox viewModeBar;
+    @FXML private VBox calendarHolder;
+    @FXML private Label dayHeaderLabel;
+    @FXML private Label scheduleCountLabel;
+    @FXML private VBox timelineBox;
+    @FXML private Button addScheduleButton;
 
     @FXML private Label tripTitleLabel;
     @FXML private Label tripPeriodLabel;
+    @FXML private HBox filterBar;
+    @FXML private VBox detailBox;
+    @FXML private Label detailHintLabel;
     @FXML private Button openWishlistButton;
-    @FXML private Button addScheduleButton;
-    @FXML private HBox dateTabBar;
-
-    @FXML private Label scheduleCountLabel;
-    @FXML private VBox scheduleListBox;
-
     @FXML private Button editScheduleButton;
     @FXML private Button deleteScheduleButton;
-    @FXML private VBox scheduleDetailBox;
 
-    @FXML private Label wishlistCountLabel;
-    @FXML private Button manageWishlistButton;
-    @FXML private VBox wishlistSummaryBox;
+    private final MonthCalendar calendar = new MonthCalendar();
 
     private Trip trip;
-
-    /** 날짜 탭에서 지금 선택된 날짜 */
     private LocalDate selectedDate;
+    private Long selectedScheduleId;
+    private final Set<Category> activeFilters = EnumSet.noneOf(Category.class);
 
     @FXML
     private void initialize() {
-        addScheduleButton.setOnAction(e -> openScheduleEditor());
+        calendarHolder.getChildren().add(calendar);
+        calendar.setOnDateSelected(this::onDateSelected);
+
+        addScheduleButton.setOnAction(e -> openEditor(null));
         openWishlistButton.setOnAction(e -> openWishlist());
-        manageWishlistButton.setOnAction(e -> openWishlist());
+        editScheduleButton.setOnAction(e -> openEditor(selectedScheduleId));
+        deleteScheduleButton.setOnAction(e -> deleteSelected());
 
-        editScheduleButton.setOnAction(e -> openScheduleEditor());
-        deleteScheduleButton.setOnAction(e -> Toast.warn("[4단계에서 구현] 일정 삭제"));
-
-        // 선택된 일정이 없으면 수정/삭제는 누를 수 없어야 한다
+        buildViewModeBar();
+        buildFilterBar();
         setScheduleActionsEnabled(false);
     }
 
@@ -80,20 +92,18 @@ public class TripDetailController implements RoutedController {
         AppContext.setCurrentTrip(trip.id(), trip.title());
 
         tripTitleLabel.setText(trip.title());
-        tripPeriodLabel.setText(Dates.full(trip.startDate()) + " ~ " + Dates.full(trip.endDate())
+        tripPeriodLabel.setText(Dates.period(trip.startDate(), trip.endDate())
                 + "  ·  " + Dates.duration(trip.startDate(), trip.endDate()));
 
-        setHeaderActionsEnabled(true);
-
-        // 오늘이 여행 기간 안이면 오늘을, 아니면 첫날을 연다.
-        // 여행 중에 앱을 켰을 때 날짜 탭을 다시 누르지 않아도 되게 하기 위해서다.
         LocalDate today = LocalDate.now();
         selectedDate = trip.covers(today) ? today : trip.startDate();
+        selectedScheduleId = null;
 
-        renderDateTabs();
-        renderScheduleList();
-        renderScheduleDetail();
-        renderWishlistSummary();
+        calendar.setRange(trip.startDate(), trip.endDate());
+        calendar.setSelected(selectedDate);
+
+        setHeaderActionsEnabled(true);
+        refreshAll();
     }
 
     private Optional<Trip> loadTrip(Object param) {
@@ -109,100 +119,217 @@ public class TripDetailController implements RoutedController {
         }
     }
 
-    /**
-     * 여행 기간의 날짜를 DAY 탭으로 깔아 준다.
-     *
-     * <p>기간이 길면 탭이 가로로 넘칠 수 있으므로 FXML 에서 스크롤되도록 감싸 두었다.</p>
-     */
-    private void renderDateTabs() {
-        dateTabBar.getChildren().clear();
+    private void buildViewModeBar() {
+        viewModeBar.getChildren().clear();
+        addModeButton("일", MonthCalendar.Mode.DAY);
+        addModeButton("주", MonthCalendar.Mode.WEEK);
+        addModeButton("월", MonthCalendar.Mode.MONTH);
+    }
 
-        for (int dayIndex = 0; dayIndex < trip.dayCount(); dayIndex++) {
-            LocalDate date = trip.dateAt(dayIndex);
-            int dayNumber = dayIndex + 1;
+    private void addModeButton(String label, MonthCalendar.Mode mode) {
+        Button button = new Button(label);
+        button.getStyleClass().add("segment");
+        if (calendar.getMode() == mode) {
+            button.getStyleClass().add("segment-active");
+        }
+        button.setOnAction(e -> {
+            calendar.setMode(mode);
+            buildViewModeBar();
+        });
+        viewModeBar.getChildren().add(button);
+    }
 
-            Button tab = new Button("DAY " + dayNumber + "  " + Dates.shortDate(date));
-            tab.getStyleClass().add(date.equals(selectedDate) ? "button-secondary" : "button-ghost");
-            tab.setOnAction(e -> {
-                selectedDate = date;
-                renderDateTabs();
-                renderScheduleList();
-                renderScheduleDetail();
-            });
-
-            dateTabBar.getChildren().add(tab);
+    private void buildFilterBar() {
+        filterBar.getChildren().clear();
+        filterBar.getChildren().add(filterChip("전체", null));
+        for (Category category : FILTERS) {
+            filterBar.getChildren().add(filterChip(category.icon() + " " + category.label(), category));
         }
     }
 
-    /** 좌측 패널: 선택한 날짜의 일정 목록. [4단계에서 저장소 연결] */
-    private void renderScheduleList() {
-        scheduleListBox.getChildren().clear();
+    private Node filterChip(String text, Category category) {
+        boolean active = category == null ? activeFilters.isEmpty() : activeFilters.contains(category);
 
-        List<String> schedules = List.of();
-        scheduleCountLabel.setText(schedules.isEmpty() ? "" : schedules.size() + "개");
+        Label label = new Label(text);
+        label.getStyleClass().add("filter-chip-label");
 
-        if (schedules.isEmpty()) {
-            scheduleListBox.getChildren().add(EmptyState
-                    .of(Dates.shortDate(selectedDate) + " 일정이 없습니다",
-                            "장소와 시간을 추가해 하루를 채워 보세요.")
-                    .primary("일정 추가", this::openScheduleEditor)
+        StackPane chip = new StackPane(label);
+        chip.getStyleClass().add("filter-chip");
+        if (active) {
+            chip.getStyleClass().add("filter-chip-active");
+            if (category != null) {
+                chip.getStyleClass().add(category.styleClass());
+            }
+        }
+
+        chip.setOnMouseClicked(e -> {
+            if (category == null) {
+                activeFilters.clear();
+            } else if (!activeFilters.add(category)) {
+                activeFilters.remove(category);
+            }
+            buildFilterBar();
+            renderTimeline();
+        });
+        return chip;
+    }
+
+    private void onDateSelected(LocalDate date) {
+        selectedDate = date;
+        selectedScheduleId = null;
+        refreshAll();
+    }
+
+    private void refreshAll() {
+        calendar.setMarkedDates(SessionStore.scheduledDates(trip.id()));
+        dayHeaderLabel.setText(Dates.full(selectedDate));
+        renderTimeline();
+        renderDetail();
+    }
+
+    private List<ScheduleItem> visibleSchedules() {
+        List<ScheduleItem> items = SessionStore.schedulesOn(trip.id(), selectedDate);
+        if (activeFilters.isEmpty()) {
+            return items;
+        }
+        List<ScheduleItem> filtered = new ArrayList<>();
+        for (ScheduleItem item : items) {
+            if (activeFilters.contains(item.category())) {
+                filtered.add(item);
+            }
+        }
+        return filtered;
+    }
+
+    private void renderTimeline() {
+        timelineBox.getChildren().clear();
+
+        List<ScheduleItem> all = SessionStore.schedulesOn(trip.id(), selectedDate);
+        List<ScheduleItem> items = visibleSchedules();
+        scheduleCountLabel.setText(all.isEmpty() ? "" : all.size() + "개");
+
+        if (all.isEmpty()) {
+            timelineBox.getChildren().add(EmptyState
+                    .of("이 날짜에 일정이 없습니다", "장소와 시간을 추가해 하루를 채워 보세요.")
+                    .primary("일정 추가", () -> openEditor(null))
+                    .secondary("샘플 일정 채우기", this::fillSample)
                     .build());
+            return;
         }
-    }
 
-    /** 중앙 패널: 선택한 일정의 상세 */
-    private void renderScheduleDetail() {
-        scheduleDetailBox.getChildren().clear();
-        setScheduleActionsEnabled(false);
-
-        scheduleDetailBox.getChildren().add(EmptyState
-                .of("선택된 일정이 없습니다",
-                        "왼쪽 목록에서 일정을 선택하면 장소와 메모가 여기에 표시됩니다.")
-                .build());
-    }
-
-    /** 우측 패널: 공동 위시리스트 요약. [5단계에서 저장소 연결] */
-    private void renderWishlistSummary() {
-        wishlistSummaryBox.getChildren().clear();
-
-        List<String> wishes = List.of();
-        wishlistCountLabel.setText(wishes.isEmpty() ? "" : wishes.size() + "곳");
-
-        if (wishes.isEmpty()) {
-            wishlistSummaryBox.getChildren().add(EmptyState
-                    .of("후보 장소가 없습니다",
-                            "가고 싶은 곳을 모아두고 일정에 등록할 수 있습니다.")
-                    .primary("위시리스트 열기", this::openWishlist)
+        if (items.isEmpty()) {
+            timelineBox.getChildren().add(EmptyState
+                    .of("선택한 분류의 일정이 없습니다", "위쪽 분류 칩을 다시 눌러 전체를 볼 수 있습니다.")
+                    .primary("전체 보기", () -> {
+                        activeFilters.clear();
+                        buildFilterBar();
+                        renderTimeline();
+                    })
                     .build());
+            return;
+        }
+
+        for (int i = 0; i < items.size(); i++) {
+            ScheduleItem item = items.get(i);
+            timelineBox.getChildren().add(new TimelineRow(
+                    item,
+                    Long.valueOf(item.id()).equals(selectedScheduleId),
+                    i == 0,
+                    i == items.size() - 1,
+                    () -> selectSchedule(item.id()),
+                    () -> openEditor(item.id()),
+                    () -> deleteSchedule(item)));
         }
     }
 
-    /** 여행을 찾지 못한 경우 (삭제됐거나 번호가 잘못됨) */
-    private void showMissingTrip() {
-        trip = null;
-        tripTitleLabel.setText("여행을 찾을 수 없습니다");
-        tripPeriodLabel.setText("요청한 여행이 삭제되었거나 번호가 올바르지 않습니다.");
-        setHeaderActionsEnabled(false);
-        setScheduleActionsEnabled(false);
-
-        dateTabBar.getChildren().clear();
-        scheduleCountLabel.setText("");
-        wishlistCountLabel.setText("");
-        scheduleListBox.getChildren().clear();
-        wishlistSummaryBox.getChildren().clear();
-
-        scheduleDetailBox.getChildren().clear();
-        scheduleDetailBox.getChildren().add(EmptyState
-                .of("여행 정보를 불러올 수 없습니다",
-                        "모임으로 돌아가 여행을 다시 선택해 주세요.")
-                .primary("모임 목록으로", () -> Router.resetTo(Route.GROUP_LIST, null))
-                .build());
+    private void selectSchedule(long scheduleId) {
+        selectedScheduleId = scheduleId;
+        renderTimeline();
+        renderDetail();
     }
 
-    private void openScheduleEditor() {
-        if (trip != null) {
-            Router.navigate(Route.SCHEDULE_EDIT, selectedDate);
+    private void renderDetail() {
+        detailBox.getChildren().clear();
+
+        Optional<ScheduleItem> selected = selectedScheduleId == null
+                ? Optional.empty()
+                : SessionStore.scheduleById(trip.id(), selectedScheduleId);
+
+        if (selected.isEmpty()) {
+            setScheduleActionsEnabled(false);
+            detailHintLabel.setText("왼쪽 타임라인에서 일정을 선택하세요.");
+            detailBox.getChildren().add(EmptyState
+                    .of("선택된 일정이 없습니다",
+                            "왼쪽 목록에서 일정을 고르면 장소와 메모가 여기에 표시됩니다.")
+                    .build());
+            return;
         }
+
+        ScheduleItem item = selected.get();
+        setScheduleActionsEnabled(true);
+        detailHintLabel.setText(Dates.full(item.date()));
+
+        Label glyph = new Label(item.category().icon());
+        glyph.getStyleClass().add("detail-icon-glyph");
+        StackPane icon = new StackPane(glyph);
+        icon.getStyleClass().addAll("detail-icon", item.category().styleClass());
+        icon.setMinSize(52, 52);
+        icon.setPrefSize(52, 52);
+        icon.setMaxSize(52, 52);
+
+        Label title = new Label(item.placeName());
+        title.getStyleClass().add("detail-title");
+        title.setWrapText(true);
+
+        Label when = new Label(item.hasTime()
+                ? Dates.time(item.time()) + " 시작"
+                : "시간 미정");
+        when.getStyleClass().add("detail-when");
+
+        VBox titleBox = new VBox(3, title, when);
+        titleBox.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(titleBox, Priority.ALWAYS);
+
+        HBox head = new HBox(14, icon, titleBox, categoryBadge(item.category()));
+        head.setAlignment(Pos.CENTER_LEFT);
+
+        detailBox.getChildren().add(head);
+        detailBox.getChildren().add(detailField("메모",
+                item.hasMemo() ? item.memo() : "메모가 없습니다."));
+        detailBox.getChildren().add(detailField("분류", item.category().label()));
+    }
+
+    private Node categoryBadge(Category category) {
+        Label badge = new Label(category.label());
+        badge.getStyleClass().addAll("category-badge", category.styleClass());
+        return badge;
+    }
+
+    private Node detailField(String label, String value) {
+        Label name = new Label(label);
+        name.getStyleClass().add("field-label");
+
+        Label content = new Label(value);
+        content.getStyleClass().add("detail-field-value");
+        content.setWrapText(true);
+
+        VBox box = new VBox(5, name, content);
+        box.getStyleClass().add("detail-field");
+        return box;
+    }
+
+    private void fillSample() {
+        SessionStore.fillSampleDay(trip.id(), selectedDate);
+        Toast.success("샘플 일정 5개를 채웠습니다. 레이아웃 확인용 데이터입니다.");
+        refreshAll();
+    }
+
+    private void openEditor(Long scheduleId) {
+        if (trip == null) {
+            return;
+        }
+        Router.navigate(Route.SCHEDULE_EDIT,
+                new ScheduleEditController.Request(trip.id(), selectedDate, scheduleId));
     }
 
     private void openWishlist() {
@@ -211,10 +338,49 @@ public class TripDetailController implements RoutedController {
         }
     }
 
+    private void deleteSelected() {
+        if (selectedScheduleId == null) {
+            return;
+        }
+        SessionStore.scheduleById(trip.id(), selectedScheduleId).ifPresent(this::deleteSchedule);
+    }
+
+    private void deleteSchedule(ScheduleItem item) {
+        if (!Dialogs.confirm("일정 삭제",
+                "'" + item.placeName() + "' 일정을 삭제합니다. 이 작업은 되돌릴 수 없습니다.",
+                "삭제")) {
+            return;
+        }
+        SessionStore.deleteSchedule(trip.id(), item.id());
+        if (Long.valueOf(item.id()).equals(selectedScheduleId)) {
+            selectedScheduleId = null;
+        }
+        Toast.success("일정을 삭제했습니다.");
+        refreshAll();
+    }
+
+    private void showMissingTrip() {
+        trip = null;
+        tripTitleLabel.setText("여행을 찾을 수 없습니다");
+        tripPeriodLabel.setText("요청한 여행이 삭제되었거나 번호가 올바르지 않습니다.");
+        dayHeaderLabel.setText("");
+        scheduleCountLabel.setText("");
+        detailHintLabel.setText("");
+
+        setHeaderActionsEnabled(false);
+        setScheduleActionsEnabled(false);
+
+        timelineBox.getChildren().clear();
+        detailBox.getChildren().clear();
+        detailBox.getChildren().add(EmptyState
+                .of("여행 정보를 불러올 수 없습니다", "모임으로 돌아가 여행을 다시 선택해 주세요.")
+                .primary("모임 목록으로", () -> Router.resetTo(Route.GROUP_LIST, null))
+                .build());
+    }
+
     private void setHeaderActionsEnabled(boolean enabled) {
         addScheduleButton.setDisable(!enabled);
         openWishlistButton.setDisable(!enabled);
-        manageWishlistButton.setDisable(!enabled);
     }
 
     private void setScheduleActionsEnabled(boolean enabled) {

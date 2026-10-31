@@ -1,41 +1,24 @@
-/* =========================================================================
-   TripSync 디자인 시스템
-   -------------------------------------------------------------------------
-   설계서의 메인 화면 참고 이미지를 기준으로 한 색과 형태:
-     · 아주 연한 푸른 회색 배경 위에 흰 카드를 띄운다
-     · 모서리를 크게 둥글리고(14~16px) 그림자는 얕게 준다
-     · 선택된 항목은 연한 파랑 배경 + 진한 파랑 글자로 표시한다
-
-   JavaFX CSS 는 웹의 var() 대신 "looked-up color" 를 쓴다. .root 에 한 번
-   정의해두면 하위 노드가 그대로 참조하므로, 아래 값만 바꾸면 앱 전체 색이 바뀐다.
-   ========================================================================= */
-
 .root {
-    /* 배경 / 면 */
+
     -ts-bg:            #F4F7FD;
     -ts-surface:       #FFFFFF;
     -ts-surface-alt:   #F8FAFE;
     -ts-surface-sunk:  #EDF2FB;
 
-    /* 글자 */
     -ts-ink:           #1B2538;
     -ts-ink-soft:      #475569;
     -ts-ink-muted:     #8491A6;
 
-    /* 선 */
     -ts-line:          #E6EDF8;
     -ts-line-strong:   #D3DEEF;
 
-    /* 브랜드 파랑 */
     -ts-primary:       #2F6FED;
     -ts-primary-dark:  #1F55C4;
     -ts-primary-soft:  #E8F0FE;
 
-    /* 강조: 초대 코드처럼 눈에 띄어야 하는 요소 */
     -ts-accent:        #E08A1E;
     -ts-accent-soft:   #FDF1DF;
 
-    /* 상태 */
     -ts-danger:        #D4453A;
     -ts-danger-soft:   #FDEBEA;
 
@@ -47,8 +30,6 @@
 .app-shell {
     -fx-background-color: -ts-bg;
 }
-
-/* ========================= 사이드바 ========================= */
 
 .sidebar {
     -fx-background-color: -ts-surface;
@@ -221,8 +202,6 @@
     -fx-text-fill: -ts-ink;
 }
 
-/* ========================= 상단 바 ========================= */
-
 .app-bar {
     -fx-background-color: -ts-surface;
     -fx-padding: 0 24 0 20;
@@ -260,14 +239,11 @@
     -fx-text-fill: -ts-primary;
 }
 
-/* ========================= 페이지 공통 ========================= */
-
 .page {
     -fx-background-color: -ts-bg;
     -fx-padding: 26 30 26 30;
 }
 
-/* 폼처럼 가운데 한 줄로 읽는 화면 */
 .page-narrow {
     -fx-max-width: 640;
 }
@@ -294,8 +270,6 @@
     -fx-text-fill: -ts-ink-muted;
 }
 
-/* ========================= 카드 ========================= */
-
 .card {
     -fx-background-color: -ts-surface;
     -fx-background-radius: 15;
@@ -306,7 +280,6 @@
     -fx-effect: dropshadow(gaussian, rgba(31, 61, 122, 0.05), 10, 0, 0, 2);
 }
 
-/* 클릭해서 이동하는 카드 — 커서와 테두리로 '누를 수 있다'를 드러낸다 */
 .card-clickable {
     -fx-cursor: hand;
 }
@@ -327,7 +300,6 @@
     -fx-text-fill: -ts-ink-muted;
 }
 
-/* 패널: 3분할 레이아웃의 각 열 */
 .panel {
     -fx-background-color: -ts-surface;
     -fx-background-radius: 15;
@@ -346,8 +318,6 @@
 .panel-body {
     -fx-padding: 15 17 17 17;
 }
-
-/* ========================= 버튼 ========================= */
 
 .button {
     -fx-background-radius: 10;
@@ -404,15 +374,12 @@
     -fx-cursor: default;
 }
 
-/* ========================= 입력 ========================= */
-
 .field-label {
     -fx-font-size: 12.5px;
     -fx-font-weight: bold;
     -fx-text-fill: -ts-ink-soft;
 }
 
-/* 필수 입력 표시 — 설계서 13장 "필수와 선택이 구분되어 있는가" */
 .field-required {
     -fx-text-fill: -ts-danger;
     -fx-font-size: 12.5px;
@@ -438,12 +405,10 @@
     -fx-border-color: -ts-primary;
 }
 
-/* 검증 실패한 입력란 */
 .field-error {
     -fx-border-color: -ts-danger;
 }
 
-/* 입력란 아래에 뜨는 오류 문구 */
 .error-text {
     -fx-text-fill: -ts-danger;
     -fx-font-size: 12px;
@@ -452,8 +417,6 @@
 .date-picker {
     -fx-background-color: transparent;
 }
-
-/* ========================= 목록 ========================= */
 
 .list-view {
     -fx-background-color: transparent;
@@ -481,7 +444,6 @@
     -fx-background-color: transparent;
 }
 
-/* DAY 탭 줄: 기간이 길 때만 가로 스크롤바가 나타난다 */
 .date-tab-scroll {
     -fx-padding: 0;
     -fx-background-color: transparent;
@@ -490,8 +452,6 @@
 .date-tab-scroll > .viewport {
     -fx-background-color: transparent;
 }
-
-/* ========================= 초대 코드 ========================= */
 
 .invite-code {
     -fx-font-family: "Consolas", "D2Coding", monospace;
@@ -502,8 +462,6 @@
     -fx-padding: 6 13 6 13;
     -fx-background-radius: 9;
 }
-
-/* ========================= 빈 상태 ========================= */
 
 .empty-state {
     -fx-padding: 42 28 42 28;
@@ -525,8 +483,6 @@
     -fx-text-fill: -ts-ink-muted;
 }
 
-/* ========================= 토스트 ========================= */
-
 .toast {
     -fx-padding: 11 20 11 20;
     -fx-background-radius: 11;
@@ -541,4 +497,416 @@
 
 .toast-warn {
     -fx-background-color: -ts-danger;
+}
+
+.app-body {
+    -fx-background-color: -ts-bg;
+}
+
+.app-bar {
+    -fx-padding: 0 22 0 0;
+    -fx-min-height: 62;
+    -fx-pref-height: 62;
+}
+
+.app-bar-brand {
+    -fx-padding: 0 0 0 20;
+}
+
+.brand-mark {
+    -fx-font-size: 20px;
+    -fx-text-fill: -ts-primary;
+}
+
+.brand-name {
+    -fx-font-size: 19px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ts-primary;
+}
+
+.brand-tagline {
+    -fx-font-size: 10.5px;
+    -fx-text-fill: -ts-ink-muted;
+    -fx-padding: 0 0 3 0;
+}
+
+.sidebar {
+    -fx-padding: 14 0 0 0;
+}
+
+.sidebar-nav {
+    -fx-padding: 0 12 6 12;
+}
+
+.nav-item {
+    -fx-padding: 12 14 12 14;
+    -fx-background-radius: 12;
+}
+
+.nav-icon {
+    -fx-font-size: 15px;
+    -fx-min-width: 20;
+}
+
+.nav-text {
+    -fx-font-size: 14px;
+}
+
+.panel-icon {
+    -fx-font-size: 16px;
+    -fx-text-fill: -ts-primary;
+}
+
+.panel-icon-small {
+    -fx-font-size: 13px;
+    -fx-text-fill: -ts-primary;
+}
+
+.panel-divider {
+    -fx-padding: 0 16 0 16;
+}
+
+.panel-divider .line {
+    -fx-border-color: -ts-line;
+    -fx-border-width: 1 0 0 0;
+}
+
+.panel-footer {
+    -fx-padding: 12 16 14 16;
+    -fx-border-color: -ts-line transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+.segmented {
+    -fx-background-color: -ts-surface-sunk;
+    -fx-background-radius: 9;
+    -fx-padding: 3;
+}
+
+.segment {
+    -fx-background-color: transparent;
+    -fx-background-radius: 7;
+    -fx-text-fill: -ts-ink-muted;
+    -fx-font-size: 12px;
+    -fx-padding: 4 12 4 12;
+    -fx-cursor: hand;
+}
+
+.segment:hover {
+    -fx-text-fill: -ts-ink;
+}
+
+.segment-active {
+    -fx-background-color: -ts-primary;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.segment-active:hover {
+    -fx-text-fill: white;
+}
+
+.calendar-holder {
+    -fx-padding: 10 14 12 14;
+}
+
+.calendar-header {
+    -fx-padding: 2 2 8 2;
+}
+
+.calendar-month-label {
+    -fx-font-size: 14.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ts-ink;
+}
+
+.calendar-nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -ts-ink-muted;
+    -fx-font-size: 17px;
+    -fx-padding: 2 9 4 9;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.calendar-nav-button:hover {
+    -fx-background-color: -ts-surface-sunk;
+    -fx-text-fill: -ts-primary;
+}
+
+.calendar-weekday {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: -ts-ink-muted;
+    -fx-padding: 2 0 6 0;
+}
+
+.calendar-day {
+    -fx-padding: 2 0 2 0;
+    -fx-cursor: hand;
+}
+
+.calendar-day-bubble {
+    -fx-min-width: 28;
+    -fx-min-height: 28;
+    -fx-pref-width: 28;
+    -fx-pref-height: 28;
+    -fx-background-radius: 14;
+}
+
+.calendar-day-number {
+    -fx-font-size: 12.5px;
+    -fx-text-fill: -ts-ink-soft;
+}
+
+.calendar-day:hover .calendar-day-bubble {
+    -fx-background-color: -ts-surface-sunk;
+}
+
+.calendar-day-outside .calendar-day-number {
+    -fx-text-fill: derive(-ts-ink-muted, 42%);
+}
+
+.calendar-day-today .calendar-day-number {
+    -fx-text-fill: -ts-primary;
+    -fx-font-weight: bold;
+}
+
+.calendar-day-selected .calendar-day-bubble {
+    -fx-background-color: -ts-primary;
+}
+
+.calendar-day-selected .calendar-day-number {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.calendar-day-selected:hover .calendar-day-bubble {
+    -fx-background-color: -ts-primary-dark;
+}
+
+.calendar-day-disabled {
+    -fx-opacity: 0.32;
+    -fx-cursor: default;
+}
+
+.calendar-day-disabled:hover .calendar-day-bubble {
+    -fx-background-color: transparent;
+}
+
+.calendar-day-dot {
+    -fx-fill: -ts-primary;
+}
+
+.day-header {
+    -fx-padding: 12 16 8 16;
+}
+
+.day-header-title {
+    -fx-font-size: 13.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ts-ink;
+}
+
+.timeline-scroll {
+    -fx-background-color: transparent;
+}
+
+.timeline {
+    -fx-padding: 4 10 10 12;
+}
+
+.timeline-row {
+    -fx-padding: 7 6 7 0;
+    -fx-background-radius: 11;
+    -fx-cursor: hand;
+}
+
+.timeline-row:hover {
+    -fx-background-color: -ts-surface-alt;
+}
+
+.timeline-row-selected {
+    -fx-background-color: -ts-primary-soft;
+}
+
+.timeline-line {
+    -fx-background-color: -ts-line;
+    -fx-min-width: 2;
+    -fx-pref-width: 2;
+    -fx-max-width: 2;
+    -fx-min-height: 6;
+}
+
+.timeline-time {
+    -fx-font-size: 12.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ts-ink-soft;
+}
+
+.timeline-time-empty {
+    -fx-font-size: 12.5px;
+    -fx-text-fill: derive(-ts-ink-muted, 25%);
+}
+
+.timeline-icon {
+    -fx-background-radius: 11;
+}
+
+.timeline-icon-glyph {
+    -fx-font-size: 15px;
+}
+
+.timeline-title {
+    -fx-font-size: 13.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ts-ink;
+}
+
+.timeline-subtitle {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: -ts-ink-muted;
+}
+
+.timeline-menu {
+    -fx-background-color: transparent;
+    -fx-text-fill: -ts-ink-muted;
+    -fx-padding: 2 2 2 6;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.timeline-menu:hover {
+    -fx-background-color: -ts-surface-sunk;
+}
+
+.timeline-menu > .arrow-button {
+    -fx-padding: 0;
+}
+
+.timeline-menu > .arrow-button > .arrow {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-shape: null;
+}
+
+.add-schedule-button {
+    -fx-background-color: -ts-primary-soft;
+    -fx-text-fill: -ts-primary;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-background-radius: 11;
+    -fx-padding: 11 0 11 0;
+    -fx-cursor: hand;
+}
+
+.add-schedule-button:hover {
+    -fx-background-color: derive(-ts-primary-soft, -7%);
+}
+
+.filter-chip {
+    -fx-background-color: -ts-surface-sunk;
+    -fx-background-radius: 20;
+    -fx-padding: 6 13 6 13;
+    -fx-cursor: hand;
+}
+
+.filter-chip:hover {
+    -fx-background-color: derive(-ts-surface-sunk, -5%);
+}
+
+.filter-chip-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: -ts-ink-soft;
+}
+
+.filter-chip-active {
+    -fx-background-color: -ts-primary;
+}
+
+.filter-chip-active .filter-chip-label {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.detail-trip-title {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ts-ink;
+}
+
+.detail-scroll {
+    -fx-background-color: transparent;
+}
+
+.detail-icon {
+    -fx-background-radius: 15;
+}
+
+.detail-icon-glyph {
+    -fx-font-size: 22px;
+}
+
+.detail-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ts-ink;
+}
+
+.detail-when {
+    -fx-font-size: 13px;
+    -fx-text-fill: -ts-primary;
+    -fx-font-weight: bold;
+}
+
+.detail-field {
+    -fx-background-color: -ts-surface-alt;
+    -fx-background-radius: 12;
+    -fx-border-color: -ts-line;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 13 15 13 15;
+}
+
+.detail-field-value {
+    -fx-font-size: 13px;
+    -fx-text-fill: -ts-ink-soft;
+}
+
+.category-badge {
+    -fx-background-radius: 20;
+    -fx-padding: 5 12 5 12;
+    -fx-font-size: 11.5px;
+    -fx-font-weight: bold;
+}
+
+.cat-sight  { -fx-background-color: #FCE7EF; -fx-text-fill: #C2366B; }
+.cat-food   { -fx-background-color: #FDEEDC; -fx-text-fill: #C2690F; }
+.cat-cafe   { -fx-background-color: #EFE7FC; -fx-text-fill: #6B3FC2; }
+.cat-stay   { -fx-background-color: #E0F4E8; -fx-text-fill: #1E7A47; }
+.cat-move   { -fx-background-color: #E1EEFE; -fx-text-fill: #1F55C4; }
+.cat-shop   { -fx-background-color: #FDF0D8; -fx-text-fill: #9A6A0B; }
+.cat-etc    { -fx-background-color: #ECEFF4; -fx-text-fill: #5A6577; }
+
+.cat-sight-dot { -fx-fill: #E0558F; }
+.cat-food-dot  { -fx-fill: #E08A1E; }
+.cat-cafe-dot  { -fx-fill: #8B5CE0; }
+.cat-stay-dot  { -fx-fill: #2EA362; }
+.cat-move-dot  { -fx-fill: #2F6FED; }
+.cat-shop-dot  { -fx-fill: #C78B14; }
+.cat-etc-dot   { -fx-fill: #8491A6; }
+
+.calendar {
+    -fx-background-color: transparent;
+}
+
+.calendar-weekday-row {
+    -fx-padding: 0;
+}
+
+.calendar-grid {
+    -fx-vgap: 1;
+}
+
+.timeline-dot {
+    -fx-fill: -ts-line-strong;
 }

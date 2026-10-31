@@ -8,17 +8,12 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<!--
-  화면 3 — 모임 상세 및 여행 목록
-  설계서 7장: 모임명, 초대 코드, 여행 목록, '새 여행 만들기' 버튼을 보여준다.
--->
 <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
             xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.tripsync.controller.GroupDetailController">
     <content>
         <VBox spacing="22" styleClass="page">
 
-            <!-- 모임 정보 -->
             <VBox spacing="12" styleClass="card">
                 <HBox alignment="CENTER_LEFT" spacing="12">
                     <Label fx:id="groupNameLabel" styleClass="page-title" text="모임" />
@@ -31,7 +26,6 @@
                        text="이 코드를 아는 사람이 모임에 참여할 수 있습니다." />
             </VBox>
 
-            <!-- 여행 목록 -->
             <HBox alignment="CENTER_LEFT" spacing="10">
                 <Label styleClass="section-title" text="여행" />
                 <Label fx:id="tripCountLabel" styleClass="section-caption" />

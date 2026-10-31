@@ -8,10 +8,6 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<!--
-  화면 4 — 여행 생성
-  설계서 7장: 여행명·시작일·종료일 필수. 종료일은 시작일보다 빠를 수 없다.
--->
 <VBox alignment="TOP_CENTER" styleClass="page"
       xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.tripsync.controller.TripCreateController">
@@ -25,7 +21,6 @@
 
         <VBox spacing="18" styleClass="card">
 
-            <!-- 여행명 (필수) -->
             <VBox spacing="7">
                 <HBox alignment="CENTER_LEFT" spacing="4">
                     <Label styleClass="field-label" text="여행명" />
@@ -35,7 +30,6 @@
                 <Label fx:id="titleErrorLabel" managed="false" styleClass="error-text" visible="false" />
             </VBox>
 
-            <!-- 기간 (필수) -->
             <VBox spacing="7">
                 <HBox alignment="CENTER_LEFT" spacing="4">
                     <Label styleClass="field-label" text="여행 기간" />

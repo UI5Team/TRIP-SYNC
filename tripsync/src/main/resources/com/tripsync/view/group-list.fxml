@@ -9,24 +9,18 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<!--
-  화면 1 — 시작 화면 및 모임 목록
-  설계서 7장: 참여 중인 모임을 확인하고, 새 모임을 만들거나 초대 코드로 참여한다.
--->
 <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
             xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.tripsync.controller.GroupListController">
     <content>
         <VBox spacing="22" styleClass="page">
 
-            <!-- 머리말 -->
             <VBox spacing="5">
                 <Label styleClass="page-title" text="내 모임" />
                 <Label styleClass="page-subtitle"
                        text="여행을 계획하려면 먼저 모임을 만들거나, 받은 초대 코드로 참여하세요." />
             </VBox>
 
-            <!-- 주 행동: 모임 만들기 / 코드로 참여 -->
             <VBox spacing="8" styleClass="card">
                 <HBox alignment="CENTER_LEFT" spacing="10">
                     <Button fx:id="createGroupButton" styleClass="button-primary" text="＋ 모임 만들기" />
@@ -38,11 +32,9 @@
                     <Button fx:id="joinButton" styleClass="button-secondary" text="코드로 참여" />
                 </HBox>
 
-                <!-- 설계서 10장: 잘못된 코드일 때 입력란 근처에 안내 -->
                 <Label fx:id="joinErrorLabel" managed="false" styleClass="error-text" visible="false" />
             </VBox>
 
-            <!-- 모임 목록 -->
             <HBox alignment="CENTER_LEFT" spacing="10">
                 <Label styleClass="section-title" text="참여 중인 모임" />
                 <Label fx:id="groupCountLabel" styleClass="section-caption" />
