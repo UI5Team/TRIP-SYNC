@@ -47,7 +47,7 @@
                 <Label styleClass="section-title" text="참여 중인 모임" />
                 <Label fx:id="groupCountLabel" styleClass="section-caption" />
                 <Region HBox.hgrow="ALWAYS" />
-                <Button fx:id="toggleEmptyPreviewButton" styleClass="button-ghost" text="빈 상태 미리보기" />
+                <Label fx:id="currentUserLabel" styleClass="section-caption" />
             </HBox>
 
             <VBox fx:id="groupListBox" spacing="12">

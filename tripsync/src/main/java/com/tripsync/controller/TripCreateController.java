@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
+import com.tripsync.nav.AppContext;
 import com.tripsync.nav.Route;
 import com.tripsync.nav.RoutedController;
 import com.tripsync.nav.Router;
@@ -38,7 +39,8 @@ public class TripCreateController implements RoutedController {
     @FXML private Button cancelButton;
     @FXML private Button submitButton;
 
-    private String groupName = "";
+    /** 어느 모임에 여행을 추가하는지. [3단계에서 저장에 사용] */
+    private Long groupId;
 
     @FXML
     private void initialize() {
@@ -55,12 +57,14 @@ public class TripCreateController implements RoutedController {
 
     @Override
     public void onEnter(Object param) {
-        if (param instanceof String name && !name.isBlank()) {
-            groupName = name;
-            groupContextLabel.setText("'" + name + "' 모임에 새 여행을 추가합니다.");
-        } else {
-            groupContextLabel.setText("모임에 새 여행을 추가합니다.");
-        }
+        groupId = param instanceof Long id ? id : AppContext.currentGroupId().orElse(null);
+
+        groupContextLabel.setText(AppContext.currentGroupName()
+                .map(name -> "'" + name + "' 모임에 새 여행을 추가합니다.")
+                .orElse("모임에 새 여행을 추가합니다."));
+
+        // 어느 모임인지 모르면 저장할 수 없으므로 아예 막는다
+        submitButton.setDisable(groupId == null);
 
         titleField.clear();
         startDatePicker.setValue(null);

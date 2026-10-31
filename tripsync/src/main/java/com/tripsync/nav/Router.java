@@ -33,6 +33,12 @@ public final class Router {
     /** 현재 보여지고 있는 화면 */
     private static Entry current;
 
+    /**
+     * 화면이 바뀔 때마다 실행할 작업. 사이드바가 자신을 다시 그리기 위해 등록한다.
+     * 라우터가 사이드바를 직접 알지 않도록 콜백으로 둔다.
+     */
+    private static Runnable navigationListener;
+
     private Router() {
         // 유틸리티 클래스 — 인스턴스를 만들지 않는다
     }
@@ -43,6 +49,16 @@ public final class Router {
         appBar = bar;
         history.clear();
         current = null;
+    }
+
+    /** 화면이 바뀔 때마다 호출될 작업을 등록한다. */
+    public static void setNavigationListener(Runnable listener) {
+        navigationListener = listener;
+    }
+
+    /** 현재 보고 있는 화면. 아직 아무것도 열지 않았으면 비어 있다. */
+    public static Route currentRoute() {
+        return current == null ? null : current.route();
     }
 
     /** 파라미터 없이 화면 이동 */
@@ -119,6 +135,10 @@ public final class Router {
             shell.setCenter(view);
             current = entry;
             appBar.update(entry.route.title(), entry.route.isBackEnabled());
+
+            if (navigationListener != null) {
+                navigationListener.run();
+            }
 
         } catch (IOException e) {
             throw new IllegalStateException(

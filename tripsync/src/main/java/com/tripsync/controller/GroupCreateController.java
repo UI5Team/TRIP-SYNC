@@ -1,10 +1,13 @@
 package com.tripsync.controller;
 
+import com.tripsync.data.DataAccessException;
+import com.tripsync.data.GroupRepository;
+import com.tripsync.data.UserRepository;
+import com.tripsync.model.Group;
 import com.tripsync.nav.Route;
 import com.tripsync.nav.RoutedController;
 import com.tripsync.nav.Router;
 import com.tripsync.ui.Toast;
-import com.tripsync.util.InviteCode;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -14,8 +17,8 @@ import javafx.scene.control.TextField;
 /**
  * 화면 2 — 모임 생성.
  *
- * <p><b>[1단계]</b> 입력 검증과 화면 이동까지 구현한다.
- * 실제 저장은 2단계에서 SQLite 저장소를 붙이며 추가한다.</p>
+ * <p>모임을 저장하면 만든 사람이 자동으로 첫 참여자가 되고, 겹치지 않는 초대 코드가
+ * 함께 발급된다. 두 작업은 저장소에서 한 트랜잭션으로 처리된다.</p>
  */
 public class GroupCreateController implements RoutedController {
 
@@ -23,17 +26,11 @@ public class GroupCreateController implements RoutedController {
 
     @FXML private TextField groupNameField;
     @FXML private Label nameErrorLabel;
-    @FXML private Label inviteCodeLabel;
-    @FXML private Button regenerateButton;
     @FXML private Button cancelButton;
     @FXML private Button submitButton;
 
-    /** 화면에 표시 중인, 저장되면 쓰일 초대 코드 */
-    private String inviteCode;
-
     @FXML
     private void initialize() {
-        regenerateButton.setOnAction(e -> refreshInviteCode());
         cancelButton.setOnAction(e -> Router.back());
         submitButton.setOnAction(e -> handleSubmit());
 
@@ -48,13 +45,7 @@ public class GroupCreateController implements RoutedController {
     public void onEnter(Object param) {
         groupNameField.clear();
         hideNameError();
-        refreshInviteCode();
         groupNameField.requestFocus();
-    }
-
-    private void refreshInviteCode() {
-        inviteCode = InviteCode.generate();
-        inviteCodeLabel.setText(inviteCode);
     }
 
     private void handleSubmit() {
@@ -70,14 +61,20 @@ public class GroupCreateController implements RoutedController {
             return;
         }
 
-        // [2단계에서 추가] 여기서 저장소에 모임을 저장한다.
+        try {
+            Group created = GroupRepository.create(name, UserRepository.currentUserId());
 
-        Toast.success("'" + name + "' 모임을 만들었습니다. 초대 코드: " + inviteCode);
+            Toast.success("'" + created.name() + "' 모임을 만들었습니다. 초대 코드 "
+                    + created.inviteCode());
 
-        // 생성한 모임의 상세 화면으로 이동한다.
-        // 생성 화면은 히스토리에 남기지 않아야 '뒤로'가 목록으로 바로 돌아간다.
-        Router.back();
-        Router.navigate(Route.GROUP_DETAIL, name);
+            // 생성 화면은 히스토리에 남기지 않아야 '뒤로'가 목록으로 바로 돌아간다
+            Router.back();
+            Router.navigate(Route.GROUP_DETAIL, created.id());
+
+        } catch (DataAccessException e) {
+            // 설계서 10장: 저장 실패 → 입력값을 유지하고 재시도 안내
+            showNameError(e.getMessage() + " 입력한 내용은 그대로 두었으니 다시 시도해 주세요.");
+        }
     }
 
     private void showNameError(String message) {

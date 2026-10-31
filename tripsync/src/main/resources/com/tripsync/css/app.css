@@ -1,39 +1,43 @@
 /* =========================================================================
    TripSync 디자인 시스템
    -------------------------------------------------------------------------
-   JavaFX CSS 는 웹 CSS 의 var() 를 지원하지 않는 대신 "looked-up color" 를
-   지원한다. .root 에 색 이름을 한 번 정의해두면 하위 노드에서 그대로 참조할 수
-   있고, 값을 바꾸면 앱 전체 색이 한 번에 바뀐다.
+   설계서의 메인 화면 참고 이미지를 기준으로 한 색과 형태:
+     · 아주 연한 푸른 회색 배경 위에 흰 카드를 띄운다
+     · 모서리를 크게 둥글리고(14~16px) 그림자는 얕게 준다
+     · 선택된 항목은 연한 파랑 배경 + 진한 파랑 글자로 표시한다
+
+   JavaFX CSS 는 웹의 var() 대신 "looked-up color" 를 쓴다. .root 에 한 번
+   정의해두면 하위 노드가 그대로 참조하므로, 아래 값만 바꾸면 앱 전체 색이 바뀐다.
    ========================================================================= */
 
 .root {
     /* 배경 / 면 */
-    -ts-bg:            #F4F1EC;
+    -ts-bg:            #F4F7FD;
     -ts-surface:       #FFFFFF;
-    -ts-surface-alt:   #FAF8F4;
-    -ts-surface-sunk:  #EFEBE4;
+    -ts-surface-alt:   #F8FAFE;
+    -ts-surface-sunk:  #EDF2FB;
 
     /* 글자 */
-    -ts-ink:           #16211F;
-    -ts-ink-soft:      #44534F;
-    -ts-ink-muted:     #7C8884;
+    -ts-ink:           #1B2538;
+    -ts-ink-soft:      #475569;
+    -ts-ink-muted:     #8491A6;
 
     /* 선 */
-    -ts-line:          #E2DCD3;
-    -ts-line-strong:   #CFC7BA;
+    -ts-line:          #E6EDF8;
+    -ts-line-strong:   #D3DEEF;
 
-    /* 브랜드: 깊은 청록 — 여행/지도 느낌을 주면서 기본 파랑과 구분된다 */
-    -ts-primary:       #1F6F6B;
-    -ts-primary-dark:  #175854;
-    -ts-primary-soft:  #E1EFED;
+    /* 브랜드 파랑 */
+    -ts-primary:       #2F6FED;
+    -ts-primary-dark:  #1F55C4;
+    -ts-primary-soft:  #E8F0FE;
 
-    /* 강조: 따뜻한 호박색 — 날짜, 초대 코드처럼 눈에 띄어야 하는 요소 */
-    -ts-accent:        #D98324;
-    -ts-accent-soft:   #FAEEDC;
+    /* 강조: 초대 코드처럼 눈에 띄어야 하는 요소 */
+    -ts-accent:        #E08A1E;
+    -ts-accent-soft:   #FDF1DF;
 
     /* 상태 */
-    -ts-danger:        #C0432F;
-    -ts-danger-soft:   #FBE9E6;
+    -ts-danger:        #D4453A;
+    -ts-danger-soft:   #FDEBEA;
 
     -fx-font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
     -fx-font-size: 13.5px;
@@ -44,75 +48,238 @@
     -fx-background-color: -ts-bg;
 }
 
-/* ========================= 상단 바 ========================= */
+/* ========================= 사이드바 ========================= */
 
-.app-bar {
+.sidebar {
     -fx-background-color: -ts-surface;
-    -fx-padding: 0 22 0 18;
-    -fx-min-height: 58;
-    -fx-pref-height: 58;
-    -fx-border-color: transparent transparent -ts-line transparent;
-    -fx-border-width: 0 0 1 0;
+    -fx-border-color: transparent -ts-line transparent transparent;
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 0;
 }
 
-.brand {
-    -fx-font-size: 17px;
+.sidebar-brand {
+    -fx-padding: 20 18 18 20;
+}
+
+.brand-mark {
+    -fx-font-size: 19px;
+    -fx-text-fill: -ts-primary;
+}
+
+.brand-name {
+    -fx-font-size: 18px;
     -fx-font-weight: bold;
     -fx-text-fill: -ts-primary;
 }
 
-.app-bar-divider {
-    -fx-text-fill: -ts-line-strong;
-    -fx-font-size: 15px;
+.brand-tagline {
+    -fx-font-size: 10.5px;
+    -fx-text-fill: -ts-ink-muted;
+    -fx-padding: 0 0 3 0;
+}
+
+.sidebar-nav {
+    -fx-padding: 0 12 8 12;
+}
+
+.nav-item {
+    -fx-padding: 11 14 11 14;
+    -fx-background-radius: 11;
+    -fx-cursor: hand;
+}
+
+.nav-item:hover {
+    -fx-background-color: -ts-surface-sunk;
+}
+
+.nav-item-active {
+    -fx-background-color: -ts-primary-soft;
+}
+
+.nav-item-active .nav-text,
+.nav-item-active .nav-icon {
+    -fx-text-fill: -ts-primary;
+    -fx-font-weight: bold;
+}
+
+.nav-item-disabled {
+    -fx-opacity: 0.4;
+    -fx-cursor: default;
+}
+
+.nav-item-disabled:hover {
+    -fx-background-color: transparent;
+}
+
+.nav-icon {
+    -fx-font-size: 14px;
+    -fx-text-fill: -ts-ink-muted;
+    -fx-min-width: 18;
+}
+
+.nav-text {
+    -fx-font-size: 13.5px;
+    -fx-text-fill: -ts-ink-soft;
+}
+
+.sidebar-separator {
+    -fx-padding: 4 18 4 18;
+}
+
+.sidebar-separator .line {
+    -fx-border-color: -ts-line;
+    -fx-border-width: 1 0 0 0;
+}
+
+.sidebar-section-header {
+    -fx-padding: 10 14 6 20;
+}
+
+.sidebar-section-title {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ts-ink-muted;
+}
+
+.sidebar-add-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -ts-primary;
+    -fx-font-size: 11.5px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 8 4 8;
+    -fx-background-radius: 7;
+    -fx-cursor: hand;
+}
+
+.sidebar-add-button:hover {
+    -fx-background-color: -ts-primary-soft;
+}
+
+.sidebar-scroll {
+    -fx-background-color: transparent;
+}
+
+.sidebar-group-list {
+    -fx-padding: 0 12 10 12;
+}
+
+.sidebar-group-item {
+    -fx-padding: 10 13 10 13;
+    -fx-background-radius: 11;
+    -fx-cursor: hand;
+}
+
+.sidebar-group-item:hover {
+    -fx-background-color: -ts-surface-sunk;
+}
+
+.sidebar-group-item-active {
+    -fx-background-color: -ts-primary-soft;
+}
+
+.sidebar-group-item-active .sidebar-group-name {
+    -fx-text-fill: -ts-primary;
+}
+
+.sidebar-group-name {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ts-ink;
+}
+
+.sidebar-group-meta {
+    -fx-font-size: 11px;
+    -fx-text-fill: -ts-ink-muted;
+}
+
+.sidebar-hint {
+    -fx-font-size: 12px;
+    -fx-text-fill: -ts-ink-muted;
+    -fx-padding: 8 13 8 13;
+}
+
+.sidebar-user-area {
+    -fx-padding: 12 14 16 14;
+    -fx-border-color: -ts-line transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+.user-chip {
+    -fx-background-color: -ts-surface-sunk;
+    -fx-background-radius: 11;
+    -fx-text-fill: -ts-ink;
+    -fx-font-size: 13px;
+    -fx-padding: 9 12 9 12;
+    -fx-cursor: hand;
+}
+
+.user-chip:hover {
+    -fx-background-color: -ts-primary-soft;
+}
+
+.user-chip .label {
+    -fx-text-fill: -ts-ink;
+}
+
+/* ========================= 상단 바 ========================= */
+
+.app-bar {
+    -fx-background-color: -ts-surface;
+    -fx-padding: 0 24 0 20;
+    -fx-min-height: 56;
+    -fx-pref-height: 56;
+    -fx-border-color: transparent transparent -ts-line transparent;
+    -fx-border-width: 0 0 1 0;
 }
 
 .screen-title {
     -fx-font-size: 14px;
+    -fx-font-weight: bold;
     -fx-text-fill: -ts-ink-soft;
 }
 
 .offline-badge {
     -fx-background-color: -ts-primary-soft;
     -fx-text-fill: -ts-primary-dark;
-    -fx-padding: 4 11 4 11;
+    -fx-padding: 5 12 5 12;
     -fx-background-radius: 20;
     -fx-font-size: 11.5px;
 }
 
 .back-button {
-    -fx-background-color: transparent;
+    -fx-background-color: -ts-surface-sunk;
     -fx-text-fill: -ts-ink-soft;
-    -fx-padding: 6 12 6 10;
-    -fx-background-radius: 8;
+    -fx-padding: 6 12 6 12;
+    -fx-background-radius: 9;
     -fx-cursor: hand;
-    -fx-font-size: 13px;
+    -fx-font-size: 14px;
 }
 
 .back-button:hover {
-    -fx-background-color: -ts-surface-sunk;
-    -fx-text-fill: -ts-ink;
+    -fx-background-color: -ts-primary-soft;
+    -fx-text-fill: -ts-primary;
 }
 
 /* ========================= 페이지 공통 ========================= */
 
 .page {
     -fx-background-color: -ts-bg;
-    -fx-padding: 28 36 28 36;
+    -fx-padding: 26 30 26 30;
 }
 
 /* 폼처럼 가운데 한 줄로 읽는 화면 */
 .page-narrow {
-    -fx-max-width: 620;
+    -fx-max-width: 640;
 }
 
 .page-title {
-    -fx-font-size: 25px;
+    -fx-font-size: 24px;
     -fx-font-weight: bold;
     -fx-text-fill: -ts-ink;
 }
 
 .page-subtitle {
-    -fx-font-size: 13.5px;
+    -fx-font-size: 13px;
     -fx-text-fill: -ts-ink-muted;
 }
 
@@ -131,11 +298,12 @@
 
 .card {
     -fx-background-color: -ts-surface;
-    -fx-background-radius: 12;
+    -fx-background-radius: 15;
     -fx-border-color: -ts-line;
-    -fx-border-radius: 12;
+    -fx-border-radius: 15;
     -fx-border-width: 1;
     -fx-padding: 18;
+    -fx-effect: dropshadow(gaussian, rgba(31, 61, 122, 0.05), 10, 0, 0, 2);
 }
 
 /* 클릭해서 이동하는 카드 — 커서와 테두리로 '누를 수 있다'를 드러낸다 */
@@ -145,11 +313,11 @@
 
 .card-clickable:hover {
     -fx-border-color: -ts-primary;
-    -fx-background-color: -ts-surface-alt;
+    -fx-effect: dropshadow(gaussian, rgba(47, 111, 237, 0.16), 14, 0, 0, 3);
 }
 
 .card-title {
-    -fx-font-size: 16px;
+    -fx-font-size: 15.5px;
     -fx-font-weight: bold;
     -fx-text-fill: -ts-ink;
 }
@@ -162,26 +330,27 @@
 /* 패널: 3분할 레이아웃의 각 열 */
 .panel {
     -fx-background-color: -ts-surface;
-    -fx-background-radius: 12;
+    -fx-background-radius: 15;
     -fx-border-color: -ts-line;
-    -fx-border-radius: 12;
+    -fx-border-radius: 15;
     -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(31, 61, 122, 0.05), 10, 0, 0, 2);
 }
 
 .panel-header {
-    -fx-padding: 14 16 12 16;
+    -fx-padding: 15 17 13 17;
     -fx-border-color: transparent transparent -ts-line transparent;
     -fx-border-width: 0 0 1 0;
 }
 
 .panel-body {
-    -fx-padding: 14 16 16 16;
+    -fx-padding: 15 17 17 17;
 }
 
 /* ========================= 버튼 ========================= */
 
 .button {
-    -fx-background-radius: 9;
+    -fx-background-radius: 10;
     -fx-padding: 9 18 9 18;
     -fx-cursor: hand;
     -fx-font-size: 13px;
@@ -204,14 +373,14 @@
 }
 
 .button-secondary:hover {
-    -fx-background-color: derive(-ts-primary-soft, -6%);
+    -fx-background-color: derive(-ts-primary-soft, -7%);
 }
 
 .button-ghost {
     -fx-background-color: -ts-surface;
     -fx-text-fill: -ts-ink-soft;
     -fx-border-color: -ts-line-strong;
-    -fx-border-radius: 9;
+    -fx-border-radius: 10;
     -fx-border-width: 1;
 }
 
@@ -227,7 +396,7 @@
 }
 
 .button-danger:hover {
-    -fx-background-color: derive(-ts-danger-soft, -6%);
+    -fx-background-color: derive(-ts-danger-soft, -7%);
 }
 
 .button:disabled {
@@ -256,9 +425,9 @@
 
 .text-field, .text-area, .date-picker > .text-field, .combo-box {
     -fx-background-color: -ts-surface;
-    -fx-background-radius: 9;
+    -fx-background-radius: 10;
     -fx-border-color: -ts-line-strong;
-    -fx-border-radius: 9;
+    -fx-border-radius: 10;
     -fx-border-width: 1;
     -fx-padding: 9 12 9 12;
     -fx-text-fill: -ts-ink;
@@ -296,7 +465,7 @@
     -fx-background-color: transparent;
     -fx-padding: 10 12 10 12;
     -fx-text-fill: -ts-ink;
-    -fx-background-radius: 9;
+    -fx-background-radius: 10;
 }
 
 .list-view .list-cell:filled:hover {
@@ -321,22 +490,22 @@
     -fx-text-fill: -ts-accent;
     -fx-background-color: -ts-accent-soft;
     -fx-padding: 6 13 6 13;
-    -fx-background-radius: 8;
+    -fx-background-radius: 9;
 }
 
 /* ========================= 빈 상태 ========================= */
 
 .empty-state {
-    -fx-padding: 44 28 44 28;
+    -fx-padding: 42 28 42 28;
     -fx-background-color: -ts-surface-alt;
-    -fx-background-radius: 12;
+    -fx-background-radius: 14;
     -fx-border-color: -ts-line;
-    -fx-border-radius: 12;
+    -fx-border-radius: 14;
     -fx-border-width: 1;
 }
 
 .empty-title {
-    -fx-font-size: 15.5px;
+    -fx-font-size: 15px;
     -fx-font-weight: bold;
     -fx-text-fill: -ts-ink-soft;
 }
@@ -350,29 +519,16 @@
 
 .toast {
     -fx-padding: 11 20 11 20;
-    -fx-background-radius: 10;
+    -fx-background-radius: 11;
     -fx-font-size: 13px;
     -fx-text-fill: white;
+    -fx-effect: dropshadow(gaussian, rgba(16, 32, 64, 0.26), 16, 0, 0, 4);
 }
 
 .toast-success {
-    -fx-background-color: -ts-primary-dark;
+    -fx-background-color: -ts-ink;
 }
 
 .toast-warn {
     -fx-background-color: -ts-danger;
-}
-
-/* ========================= 1단계 안내 배너 ========================= */
-/* 아직 구현되지 않은 화면임을 알리는 임시 배너. 단계가 끝나면 제거한다. */
-
-.stage-note {
-    -fx-background-color: -ts-accent-soft;
-    -fx-border-color: derive(-ts-accent, 55%);
-    -fx-border-radius: 10;
-    -fx-background-radius: 10;
-    -fx-border-width: 1;
-    -fx-padding: 11 15 11 15;
-    -fx-font-size: 12.5px;
-    -fx-text-fill: #7A4A11;
 }

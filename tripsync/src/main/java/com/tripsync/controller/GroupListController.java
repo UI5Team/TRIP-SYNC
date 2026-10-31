@@ -1,12 +1,20 @@
 package com.tripsync.controller;
 
 import java.util.List;
+import java.util.Optional;
 
+import com.tripsync.data.DataAccessException;
+import com.tripsync.data.GroupRepository;
+import com.tripsync.data.UserRepository;
+import com.tripsync.model.AppUser;
+import com.tripsync.model.Group;
 import com.tripsync.nav.Route;
 import com.tripsync.nav.RoutedController;
 import com.tripsync.nav.Router;
 import com.tripsync.ui.Cards;
 import com.tripsync.ui.EmptyState;
+import com.tripsync.ui.Toast;
+import com.tripsync.util.InviteCode;
 
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -18,9 +26,8 @@ import javafx.scene.layout.VBox;
 /**
  * 화면 1 — 시작 화면 및 모임 목록.
  *
- * <p><b>[1단계]</b> 지금은 저장소가 없어 샘플 모임을 하드코딩해 보여준다.
- * 화면 이동이 전부 동작하는지 확인하는 것이 1단계의 목표이고,
- * 2단계에서 이 부분을 SQLite 저장소 조회로 교체한다.</p>
+ * <p>현재 프로필이 참여 중인 모임만 보여준다. 프로필을 바꾸면 목록도 함께 바뀌므로
+ * 한 PC 에서도 "A 가 만든 모임에 B 가 코드로 들어가는" 과정을 그대로 보여줄 수 있다.</p>
  */
 public class GroupListController implements RoutedController {
 
@@ -29,30 +36,16 @@ public class GroupListController implements RoutedController {
     @FXML private Button joinButton;
     @FXML private Label joinErrorLabel;
     @FXML private Label groupCountLabel;
-    @FXML private Button toggleEmptyPreviewButton;
+    @FXML private Label currentUserLabel;
     @FXML private VBox groupListBox;
-
-    /** 빈 상태를 보여주는 중인지 (1단계 미리보기용 토글) */
-    private boolean showingEmptyPreview = false;
-
-    /** [1단계] 임시 샘플 데이터 — 2단계에서 저장소 조회로 대체한다. */
-    private record SampleGroup(String name, String inviteCode, int tripCount) {
-    }
-
-    private static final List<SampleGroup> SAMPLE_GROUPS = List.of(
-            new SampleGroup("졸업 여행 준비방", "TS4K7Q", 2),
-            new SampleGroup("동아리 MT", "TSB2XM", 1)
-    );
 
     @FXML
     private void initialize() {
         createGroupButton.setOnAction(e -> Router.navigate(Route.GROUP_CREATE));
         joinButton.setOnAction(e -> handleJoin());
-        toggleEmptyPreviewButton.setOnAction(e -> {
-            showingEmptyPreview = !showingEmptyPreview;
-            toggleEmptyPreviewButton.setText(showingEmptyPreview ? "샘플 목록 보기" : "빈 상태 미리보기");
-            renderGroups();
-        });
+
+        // Enter 로도 참여할 수 있게 한다
+        inviteCodeField.setOnAction(e -> handleJoin());
 
         // 코드를 고쳐 입력하기 시작하면 이전 오류 메시지를 지운다
         inviteCodeField.textProperty().addListener((obs, old, now) -> hideJoinError());
@@ -63,11 +56,26 @@ public class GroupListController implements RoutedController {
         renderGroups();
     }
 
-    /** 목록 영역을 다시 그린다. 설계서의 "저장 후 재조회" 흐름이 이 메서드로 모인다. */
+    /** 저장소에서 목록을 다시 읽어 그린다. 설계서의 "저장 후 재조회" 흐름이 여기로 모인다. */
     private void renderGroups() {
         groupListBox.getChildren().clear();
 
-        List<SampleGroup> groups = showingEmptyPreview ? List.of() : SAMPLE_GROUPS;
+        List<Group> groups;
+        try {
+            groups = GroupRepository.findAllForUser(UserRepository.currentUserId());
+            currentUserLabel.setText(UserRepository.currentUser()
+                    .map(user -> user.displayName() + " 님의 목록")
+                    .orElse(""));
+
+        } catch (DataAccessException e) {
+            groupCountLabel.setText("");
+            groupListBox.getChildren().add(EmptyState
+                    .of("모임 목록을 불러오지 못했습니다", e.getMessage())
+                    .primary("다시 시도", this::renderGroups)
+                    .build());
+            return;
+        }
+
         groupCountLabel.setText(groups.isEmpty() ? "" : groups.size() + "개");
 
         if (groups.isEmpty()) {
@@ -75,21 +83,19 @@ public class GroupListController implements RoutedController {
             return;
         }
 
-        for (SampleGroup group : groups) {
+        for (Group group : groups) {
             groupListBox.getChildren().add(buildGroupCard(group));
         }
     }
 
-    private Node buildGroupCard(SampleGroup group) {
-        String meta = group.tripCount() == 0
-                ? "아직 여행이 없습니다"
-                : "여행 " + group.tripCount() + "개";
+    private Node buildGroupCard(Group group) {
+        String meta = "참여자 " + group.memberCount() + "명";
 
         return Cards.clickable(
                 group.name(),
                 meta,
                 group.inviteCode(),
-                () -> Router.navigate(Route.GROUP_DETAIL, group.name()));
+                () -> Router.navigate(Route.GROUP_DETAIL, group.id()));
     }
 
     /** 설계서 10장: 참여 중인 모임이 없을 때의 안내 */
@@ -103,30 +109,54 @@ public class GroupListController implements RoutedController {
     }
 
     /**
-     * 초대 코드 참여.
+     * 초대 코드로 모임에 참여한다.
      *
-     * <p><b>[1단계]</b> 입력값 형식만 검사해 오류 표시 흐름을 확인한다.
-     * 실제 코드 조회는 2단계에서 저장소를 붙이며 구현한다.</p>
+     * <p>형식 검사 → 모임 조회 → 중복 참여 확인 순으로 거른다.
+     * 어느 단계에서 막혔는지에 따라 다른 안내를 보여줘야, 사용자가
+     * 코드를 잘못 친 것인지 이미 들어가 있는 것인지 구분할 수 있다.</p>
      */
     private void handleJoin() {
-        String code = inviteCodeField.getText() == null ? "" : inviteCodeField.getText().trim();
+        String code = InviteCode.normalize(inviteCodeField.getText());
 
         if (code.isEmpty()) {
             showJoinError("초대 코드를 입력해 주세요.");
             return;
         }
-
-        boolean exists = SAMPLE_GROUPS.stream()
-                .anyMatch(g -> g.inviteCode().equalsIgnoreCase(code));
-
-        if (!exists) {
-            showJoinError("코드를 확인해 주세요. 해당 코드의 모임을 찾을 수 없습니다.");
+        if (!InviteCode.isValidFormat(code)) {
+            showJoinError("코드 형식이 올바르지 않습니다. TS 로 시작하는 6자리 코드입니다. (예: TS4K7Q)");
             return;
         }
 
-        hideJoinError();
-        inviteCodeField.clear();
-        Router.navigate(Route.GROUP_DETAIL, code);
+        try {
+            Optional<Group> found = GroupRepository.findByInviteCode(code);
+
+            // 설계서 10장: 초대 코드가 잘못됨 → 입력란 근처에 안내
+            if (found.isEmpty()) {
+                showJoinError("코드를 확인해 주세요. 해당 코드의 모임을 찾을 수 없습니다.");
+                return;
+            }
+
+            Group group = found.get();
+            long userId = UserRepository.currentUserId();
+            String userName = UserRepository.currentUser()
+                    .map(AppUser::displayName)
+                    .orElse("나");
+
+            boolean newlyJoined = GroupRepository.join(group.id(), userId);
+
+            inviteCodeField.clear();
+            hideJoinError();
+
+            Toast.success(newlyJoined
+                    ? userName + " 님이 '" + group.name() + "' 모임에 참여했습니다."
+                    : "이미 참여 중인 모임입니다.");
+
+            Router.navigate(Route.GROUP_DETAIL, group.id());
+
+        } catch (DataAccessException e) {
+            // 설계서 10장: 저장 실패 → 입력값을 유지하고 재시도 안내
+            showJoinError(e.getMessage() + " 잠시 후 다시 시도해 주세요.");
+        }
     }
 
     private void showJoinError(String message) {

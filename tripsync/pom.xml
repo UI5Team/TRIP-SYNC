@@ -16,6 +16,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>21.0.2</javafx.version>
+        <sqlite.version>3.45.3.0</sqlite.version>
         <main.class>com.tripsync.TripSyncApp</main.class>
     </properties>
 
@@ -30,6 +31,25 @@
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
+        </dependency>
+
+        <!-- SQLite: 서버 없이 .db 파일 하나로 동작하는 로컬 데이터베이스 -->
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>${sqlite.version}</version>
+        </dependency>
+
+        <!--
+            sqlite-jdbc 가 로깅에 slf4j 를 쓴다. 구현체가 없으면 실행할 때마다
+            "SLF4J: No providers were found" 경고가 콘솔에 뜬다.
+            기능에는 지장이 없지만 시연 중에 오류처럼 보이므로,
+            아무것도 출력하지 않는 구현체를 넣어 조용히 만든다.
+        -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-nop</artifactId>
+            <version>2.0.13</version>
         </dependency>
     </dependencies>
 
